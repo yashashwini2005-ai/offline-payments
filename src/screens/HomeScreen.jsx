@@ -114,10 +114,9 @@ const HomeScreen = () => {
               </div>
             </div>
             <div className="flex items-baseline gap-2">
-              <h2 className="text-4xl font-black text-primary-900 italic">₹{offlineBalance.toLocaleString()}</h2>
-              <span className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest">Offline Balance</span>
+              <h2 className="text-4xl font-black text-primary-900 italic">{Math.round((offlineBalance / 1000) * 100)}%</h2>
+              <span className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest">Utilization</span>
             </div>
-            <p className="text-[10px] font-black text-primary-900/20 uppercase tracking-widest">{offlineTokens.length} Secure Tokens Loaded</p>
           </div>
           <motion.button
             whileTap={{ scale: 0.95 }}
@@ -148,7 +147,13 @@ const HomeScreen = () => {
       <div className="space-y-6">
         <div className="flex justify-between items-center px-1">
           <h3 className="text-sm font-black text-primary-900">Quick Pay Merchants</h3>
-          <button className="text-[10px] font-black uppercase text-primary-600 tracking-widest">See All</button>
+          <motion.button 
+            whileTap={{ scale: 0.95 }}
+            onClick={() => navigateTo('search')}
+            className="text-[10px] font-black uppercase text-primary-600 tracking-widest"
+          >
+            See All
+          </motion.button>
         </div>
         
         <div className="grid grid-cols-4 gap-4">

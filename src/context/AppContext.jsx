@@ -4,6 +4,7 @@ import { TransactionQueue } from '../logic/TransactionQueue';
 import { SyncEngine } from '../logic/SyncEngine';
 import { BankServer } from '../logic/bankServer';
 import { TokenManager } from '../logic/tokenManager';
+import { sendDiscordNotification } from '../services/discordWebhook';
 
 const AppContext = createContext();
 
@@ -78,16 +79,51 @@ export const AppProvider = ({ children }) => {
           setHistory(updatedLedger);
         };
 
-        syncEngineRef.current = new SyncEngine((state) => setNetworkState(state), refreshHistory);
+        syncEngineRef.current = new SyncEngine((state) => {
+          setNetworkState(state);
+          // Discord: Sync failure notification
+          if (state === 'SYNC_FAILED') {
+            sendDiscordNotification('SYNC_FAILED', {
+              user: 'Yashashwini Kumar',
+              status: 'Sync Failed',
+              details: 'Transaction ledger sync failed. Exponential backoff retry scheduled.'
+            });
+          }
+          // Discord: Sync complete notification
+          if (state === 'ONLINE' && syncEngineRef.current?.retryCount === 0) {
+            sendDiscordNotification('SYNC_COMPLETE', {
+              user: 'Yashashwini Kumar',
+              status: 'Synced Successfully',
+              details: 'All pending offline transactions uploaded to ledger.'
+            });
+          }
+        }, refreshHistory);
         monitorRef.current = new ConnectivityMonitor((state) => {
           setNetworkState(state);
+          // Discord: Network status switch notification
+          if (state === NETWORK_STATE.RECONNECTED || state === NETWORK_STATE.OFFLINE) {
+            sendDiscordNotification('NETWORK_SWITCH', {
+              user: 'Yashashwini Kumar',
+              mode: state === NETWORK_STATE.OFFLINE ? 'OFFLINE' : 'ONLINE (Reconnected)',
+              status: state,
+              details: 'Wallet mode switched automatically by ConnectivityMonitor.'
+            });
+          }
           if (state === NETWORK_STATE.RECONNECTED || state === NETWORK_STATE.ONLINE) {
             syncEngineRef.current.startSync();
           }
         });
         monitorRef.current.start();
       } catch (e) {
-        if (e.message === 'TAMPER_DETECTED') setTamperDetected(true);
+        if (e.message === 'TAMPER_DETECTED') {
+          setTamperDetected(true);
+          // Discord: Fraud / double-spend alert
+          sendDiscordNotification('FRAUD_ALERT', {
+            user: 'Yashashwini Kumar',
+            status: 'TAMPER DETECTED',
+            details: 'Cryptographic signature mismatch — possible double-spend or token replay attack detected.'
+          });
+        }
       }
     };
     init();
@@ -138,6 +174,15 @@ export const AppProvider = ({ children }) => {
     };
     setTokenActivities(prev => [activity, ...prev]);
 
+    // Discord: Tokens loaded notification
+    sendDiscordNotification('TOKENS_LOADED', {
+      user: user.name,
+      amount: amount,
+      tokenCount: TokenManager.getTokens().length,
+      mode: 'Online',
+      status: 'Reserve Authorized'
+    });
+
     setIsPreloading(false);
     setPreloadAmount(0);
     return true;
@@ -178,6 +223,14 @@ export const AppProvider = ({ children }) => {
       setLastTransaction(tx);
       setPendingTransaction(null);
       setCurrentScreen('success');
+      // Discord: Bank transfer notification
+      sendDiscordNotification('PAYMENT_SUCCESS', {
+        user: user.name,
+        amount: pendingTransaction.amount,
+        receiver: pendingTransaction.receiverName,
+        mode: 'Online – Bank Transfer',
+        status: 'Success'
+      });
       return;
     }
 
@@ -189,6 +242,14 @@ export const AppProvider = ({ children }) => {
       const newBalance = balance - pendingTransaction.amount;
       await BankServer.updateBalance(newBalance);
       setBalance(newBalance);
+      // Discord: Online payment notification
+      sendDiscordNotification('PAYMENT_SUCCESS', {
+        user: user.name,
+        amount: pendingTransaction.amount,
+        receiver: pendingTransaction.receiver,
+        mode: 'Online',
+        status: 'Success'
+      });
     } else {
       await TokenManager.useToken(pendingTransaction.amount);
       const updatedTokens = TokenManager.getTokens();
@@ -207,6 +268,15 @@ export const AppProvider = ({ children }) => {
         remarks: 'Payment Settled'
       };
       setTokenActivities(prev => [activity, ...prev]);
+      // Discord: Offline payment notification
+      sendDiscordNotification('OFFLINE_PAYMENT', {
+        user: user.name,
+        amount: pendingTransaction.amount,
+        receiver: pendingTransaction.receiver,
+        tokenCount: TokenManager.getTokens().length,
+        mode: 'Offline',
+        status: 'Pending Sync'
+      });
     }
 
     const tx = {

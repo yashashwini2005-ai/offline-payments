@@ -10,20 +10,64 @@ import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const ProfileScreen = () => {
-  const { user, linkedBanks, navigateTo, switchPrimaryBank, setLinkedBanks, setUser, offlineTokens } = useApp();
+  const { user, linkedBanks, navigateTo, switchPrimaryBank, offlineTokens } = useApp();
   const { language, setLanguage, t } = useLanguage();
+  
   const [showQR, setShowQR] = useState(false);
   const [showAddBank, setShowAddBank] = useState(false);
   const [showLang, setShowLang] = useState(false);
   const [showChangePin, setShowChangePin] = useState(false);
+  const [showSecurity, setShowSecurity] = useState(false);
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [showDevices, setShowDevices] = useState(false);
+  
   const [newPin, setNewPin] = useState('');
-  const [activeTab, setActiveTab] = useState('banks'); // banks, settings
+  const [activeTab, setActiveTab] = useState('wallet'); // wallet, settings
+
+  const [securityPrefs, setSecurityPrefs] = useState({ biometric: true, pinLock: true, screenLock: true });
+  const [notifPrefs, setNotifPrefs] = useState({ transactions: true, sms: false, push: true });
+
+  const toggleSecurity = (key) => setSecurityPrefs(prev => ({ ...prev, [key]: !prev[key] }));
+  const toggleNotif = (key) => setNotifPrefs(prev => ({ ...prev, [key]: !prev[key] }));
 
   const languages = [
     { code: 'en', name: 'English', native: 'English' },
     { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
     { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
-    { code: 'te', name: 'Telugu', native: 'తెలుగు' }
+    { code: 'te', name: 'Telugu', native: 'ತೆಲುಗು' }
+  ];
+
+  const settingsItems = [
+    { 
+      icon: <ShieldCheck size={20} />, 
+      label: t('security_settings'), 
+      sub: "Biometric & PIN",
+      onClick: () => setShowSecurity(true)
+    },
+    { 
+      icon: <Bell size={20} />, 
+      label: t('notification_prefs'), 
+      sub: "Alerts & SMS",
+      onClick: () => setShowNotifications(true)
+    },
+    { 
+      icon: <Globe size={20} />, 
+      label: t('language_selection'), 
+      sub: languages.find(l => l.code === language)?.native || 'English',
+      onClick: () => setShowLang(true)
+    },
+    { 
+      icon: <Smartphone size={20} />, 
+      label: t('linked_devices'), 
+      sub: "Galaxy S23 Ultra",
+      onClick: () => setShowDevices(true)
+    },
+    { 
+      icon: <Lock size={20} />, 
+      label: "Change UPI PIN", 
+      sub: "Secure your transactions",
+      onClick: () => setShowChangePin(true)
+    },
   ];
 
   return (
@@ -47,8 +91,8 @@ const ProfileScreen = () => {
       </div>
 
       <div className="flex-1 overflow-y-auto scrollbar-hide pb-32">
-        {/* Profile Header Section */}
         <div className="p-6 space-y-8">
+          {/* Profile Header */}
           <div className="flex flex-col items-center text-center space-y-4">
             <div className="relative group">
               <motion.div 
@@ -60,7 +104,6 @@ const ProfileScreen = () => {
                   alt="Profile" 
                   className="w-full h-full object-cover rounded-[2.8rem] border-4 border-white"
                 />
-                <div className="absolute inset-0 bg-primary-900/10 rounded-[2.8rem] opacity-0 group-hover:opacity-100 transition-opacity" />
               </motion.div>
               <motion.button 
                 whileHover={{ scale: 1.1 }}
@@ -78,74 +121,30 @@ const ProfileScreen = () => {
               </div>
               <p className="text-primary-900/40 text-xs font-bold uppercase tracking-widest">{user.phone} • {user.email}</p>
             </div>
-
-            <div className="w-full max-w-xs p-4 glass rounded-3xl border border-primary-50 flex items-center justify-between">
-              <div className="flex items-center gap-3">
-                <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center text-primary-600">
-                  <Sparkles size={18} />
-                </div>
-                <div className="text-left">
-                  <p className="text-[10px] font-black text-primary-900/40 uppercase tracking-widest">{t('profile_completion')}</p>
-                  <p className="text-sm font-black text-primary-900">{user.completion}%</p>
-                </div>
-              </div>
-              <div className="w-24 h-2 bg-primary-100 rounded-full overflow-hidden">
-                <motion.div 
-                  initial={{ width: 0 }}
-                  animate={{ width: `${user.completion}%` }}
-                  className="h-full blue-gradient"
-                />
-              </div>
-            </div>
-
-            {/* Offline Tokens Count */}
-            <div className="w-full max-w-xs p-5 bg-orange-50 rounded-3xl border border-orange-100 flex items-center gap-4">
-              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-orange-600 shadow-sm">
-                <ShieldCheck size={20} />
-              </div>
-              <div className="text-left">
-                <p className="text-[10px] font-black text-orange-600/40 uppercase tracking-widest">Tokens Loaded</p>
-                <p className="text-sm font-black text-orange-900">{offlineTokens.length} Active Tokens</p>
-              </div>
-            </div>
           </div>
 
           {/* Tab Switcher */}
-          <div className="flex p-1.5 bg-primary-50 rounded-[2rem] border border-primary-100">
-            <TabButton 
-              active={activeTab === 'banks'} 
-              onClick={() => setActiveTab('banks')} 
-              icon={<Landmark size={18} />} 
-              label={t('history')} 
-            />
-            <TabButton 
-              active={activeTab === 'settings'} 
-              onClick={() => setActiveTab('settings')} 
-              icon={<ShieldCheck size={18} />} 
-              label={t('settings')} 
-            />
+          <div className="p-1.5 bg-primary-50 rounded-[2rem] flex items-center shadow-inner">
+            <TabButton active={activeTab === 'wallet'} onClick={() => setActiveTab('wallet')} label="My Wallet" />
+            <TabButton active={activeTab === 'settings'} onClick={() => setActiveTab('settings')} label="Settings" />
           </div>
 
           <AnimatePresence mode="wait">
-            {activeTab === 'banks' ? (
+            {activeTab === 'wallet' ? (
               <motion.div 
-                key="banks"
+                key="wallet"
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: 20 }}
                 className="space-y-8"
               >
-                {/* Linked Banks Section */}
+                {/* Bank Accounts */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center px-1">
-                    <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">{t('linked_banks')}</h4>
-                    <motion.button 
-                      onClick={() => setShowAddBank(true)}
-                      whileTap={{ scale: 0.95 }}
-                      className="text-[10px] font-black uppercase text-primary-600 flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 rounded-xl"
-                    >
-                      <Plus size={14} strokeWidth={3} /> {t('add_new')}
-                    </motion.button>
+                    <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">Linked Bank Accounts</h4>
+                    <button onClick={() => setShowAddBank(true)} className="text-[10px] font-black text-primary-600 uppercase tracking-widest flex items-center gap-1">
+                      <Plus size={14} /> Add Bank
+                    </button>
                   </div>
                   
                   <div className="space-y-4">
@@ -181,31 +180,29 @@ const ProfileScreen = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 exit={{ opacity: 0, x: -20 }}
-                className="space-y-4"
+                className="space-y-6"
               >
-                <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">Account & Security</h4>
-                <div className="glass rounded-[2.5rem] border border-primary-50 overflow-hidden">
-                  <SettingsItem icon={<ShieldCheck size={20} />} label={t('security_settings')} sub="Password, Fingerprint, PIN" />
-                  <SettingsItem icon={<Bell size={20} />} label={t('notification_prefs')} sub="Alerts, SMS, Transaction History" />
-                  <SettingsItem 
-                    onClick={() => setShowLang(true)}
-                    icon={<Globe size={20} />} 
-                    label={t('language_selection')} 
-                    sub={languages.find(l => l.code === language)?.native || 'English'} 
-                  />
-                  <SettingsItem icon={<Smartphone size={20} />} label={t('linked_devices')} sub="Samsung S23 Ultra" />
-                  <SettingsItem 
-                    onClick={() => setShowChangePin(true)}
-                    icon={<Lock size={20} />} 
-                    label="Change UPI PIN" 
-                    sub="Secure your transactions" 
-                  />
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">Account & Security</h4>
+                  <div className="glass rounded-[2.5rem] border border-primary-50 overflow-hidden">
+                    {settingsItems.map((item, idx) => (
+                      <SettingsItem 
+                        key={idx}
+                        icon={item.icon} 
+                        label={item.label} 
+                        sub={item.sub}
+                        onClick={item.onClick}
+                      />
+                    ))}
+                  </div>
                 </div>
 
-                <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40 pt-4">Support & About</h4>
-                <div className="glass rounded-[2.5rem] border border-primary-50 overflow-hidden">
-                  <SettingsItem icon={<Headphones size={20} />} label={t('help_support')} sub="24/7 Priority Assistance" />
-                  <SettingsItem icon={<AlertCircle size={20} />} label={t('about_janpay')} sub="v8.0.10 Professional Edition" />
+                <div className="space-y-4">
+                  <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">Support & About</h4>
+                  <div className="glass rounded-[2.5rem] border border-primary-50 overflow-hidden">
+                    <SettingsItem icon={<Headphones size={20} />} label={t('help_support')} sub="24/7 Priority Assistance" />
+                    <SettingsItem icon={<AlertCircle size={20} />} label={t('about_janpay')} sub="v8.0.10 Professional Edition" />
+                  </div>
                 </div>
 
                 <motion.button 
@@ -220,36 +217,22 @@ const ProfileScreen = () => {
         </div>
       </div>
 
-      {/* Language Modal */}
+      {/* Modals */}
       <AnimatePresence>
         {showLang && (
           <div className="fixed inset-0 z-[110] flex items-end justify-center">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }}
-              onClick={() => setShowLang(false)}
-              className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" 
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              className="relative w-full max-w-md bg-white rounded-t-[3rem] p-10 pb-16 shadow-2xl"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowLang(false)} className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" />
+            <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="relative w-full max-w-md bg-white rounded-t-[3rem] p-10 pb-16 shadow-2xl">
               <div className="w-12 h-1.5 bg-primary-100 rounded-full mx-auto mb-8" />
-              <h3 className="text-2xl font-black text-primary-900 mb-2 text-center">{t('language_selection')}</h3>
-              
-              <div className="grid grid-cols-2 gap-4 mt-8">
+              <h3 className="text-2xl font-black text-primary-900 mb-8 text-center">{t('language_selection')}</h3>
+              <div className="grid grid-cols-2 gap-4">
                 {languages.map((lang) => (
                   <motion.button
                     key={lang.code}
                     whileTap={{ scale: 0.95 }}
                     onClick={() => { setLanguage(lang.code); setShowLang(false); }}
                     className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-2 ${
-                      language === lang.code 
-                        ? 'border-primary-500 bg-primary-50' 
-                        : 'border-primary-50 bg-white'
+                      language === lang.code ? 'border-primary-500 bg-primary-50' : 'border-primary-50 bg-white'
                     }`}
                   >
                     <span className="text-lg font-black text-primary-900">{lang.native}</span>
@@ -260,241 +243,159 @@ const ProfileScreen = () => {
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
 
-      {/* QR Modal */}
-      <AnimatePresence>
         {showQR && (
           <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }}
-              onClick={() => setShowQR(false)}
-              className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" 
-            />
-            <motion.div
-              initial={{ scale: 0.8, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.8, opacity: 0 }}
-              className="relative w-full max-w-sm bg-white rounded-[3rem] p-10 text-center shadow-2xl"
-            >
+            <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={() => setShowQR(false)} className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" />
+            <motion.div initial={{ scale: 0.8, opacity: 0 }} animate={{ scale: 1, opacity: 1 }} exit={{ scale: 0.8, opacity: 0 }} className="relative w-full max-w-sm bg-white rounded-[3rem] p-10 text-center shadow-2xl">
               <div className="w-16 h-16 blue-gradient rounded-3xl mx-auto mb-6 flex items-center justify-center text-white shadow-xl">
                 <QrCode size={32} />
               </div>
               <h3 className="text-2xl font-black text-primary-900 mb-2">My UPI QR</h3>
               <p className="text-primary-900/40 text-[10px] font-black uppercase tracking-widest mb-10">Scan to pay directly into your account</p>
-              
-              <div className="p-8 bg-primary-50 rounded-[2.5rem] border border-primary-100 mb-10 relative">
+              <div className="p-8 bg-primary-50 rounded-[2.5rem] border border-primary-100 mb-10">
                 <QrCode size={180} className="mx-auto text-primary-900" />
-                <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-12 h-12 bg-white rounded-2xl flex items-center justify-center shadow-lg border border-primary-100">
-                  <Landmark className="text-primary-600" size={24} />
-                </div>
               </div>
-
               <div className="flex gap-4">
-                <motion.button whileTap={{ scale: 0.95 }} className="flex-1 py-4 bg-primary-50 rounded-2xl text-primary-600 font-black text-[10px] uppercase flex items-center justify-center gap-2">
-                  <Download size={16} /> Save
-                </motion.button>
-                <motion.button whileTap={{ scale: 0.95 }} className="flex-1 py-4 bg-primary-50 rounded-2xl text-primary-600 font-black text-[10px] uppercase flex items-center justify-center gap-2">
-                  <Share2 size={16} /> Share
-                </motion.button>
+                <motion.button whileTap={{ scale: 0.95 }} className="flex-1 py-4 bg-primary-50 rounded-2xl text-primary-600 font-black text-[10px] uppercase flex items-center justify-center gap-2"><Download size={16} /> Save</motion.button>
+                <motion.button whileTap={{ scale: 0.95 }} className="flex-1 py-4 bg-primary-50 rounded-2xl text-primary-600 font-black text-[10px] uppercase flex items-center justify-center gap-2"><Share2 size={16} /> Share</motion.button>
               </div>
             </motion.div>
           </div>
         )}
-      </AnimatePresence>
 
-      {/* Add Bank Modal */}
-      <AnimatePresence>
-        {showAddBank && (
-          <div className="fixed inset-0 z-[100] flex items-end justify-center">
-            <motion.div 
-              initial={{ opacity: 0 }} 
-              animate={{ opacity: 1 }} 
-              exit={{ opacity: 0 }}
-              onClick={() => setShowAddBank(false)}
-              className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" 
-            />
-            <motion.div
-              initial={{ y: '100%' }}
-              animate={{ y: 0 }}
-              exit={{ y: '100%' }}
-              transition={{ type: 'spring', damping: 25, stiffness: 200 }}
-              className="relative w-full max-w-md bg-white rounded-t-[3rem] p-10 pb-16 shadow-2xl"
-            >
-              <div className="w-12 h-1.5 bg-primary-100 rounded-full mx-auto mb-8" />
-              <h3 className="text-2xl font-black text-primary-900 mb-2 text-center">Add Bank Account</h3>
-              <p className="text-primary-900/40 text-[10px] font-black uppercase tracking-widest text-center mb-10">Link a new account via secure UPI handshake</p>
-              
-              <div className="space-y-6">
-                <div className="grid grid-cols-2 gap-4">
-                  <BankOption name="HDFC" icon={<Landmark size={24} />} />
-                  <BankOption name="SBI" icon={<Landmark size={24} />} />
-                  <BankOption name="ICICI" icon={<Landmark size={24} />} />
-                  <BankOption name="Axis" icon={<Landmark size={24} />} />
-                </div>
-                
-                <div className="pt-4">
-                  <motion.button 
-                    whileTap={{ scale: 0.98 }}
-                    onClick={() => setShowAddBank(false)}
-                    className="w-full py-5 blue-gradient rounded-[2rem] font-black text-white uppercase tracking-widest"
-                  >
-                    Search More Banks
-                  </motion.button>
+        {showSecurity && (
+          <SettingsModal title="Security Settings" onClose={() => setShowSecurity(false)} icon={<ShieldCheck size={32} />}>
+            <div className="space-y-4">
+              <ToggleItem label="Biometric Unlock" sub="Fingerprint / Face ID" active={securityPrefs.biometric} onToggle={() => toggleSecurity('biometric')} />
+              <ToggleItem label="App PIN Lock" sub="Require PIN on startup" active={securityPrefs.pinLock} onToggle={() => toggleSecurity('pinLock')} />
+              <ToggleItem label="Screen Lock" sub="Secure checkout screen" active={securityPrefs.screenLock} onToggle={() => toggleSecurity('screenLock')} />
+            </div>
+          </SettingsModal>
+        )}
+
+        {showNotifications && (
+          <SettingsModal title="Notification Prefs" onClose={() => setShowNotifications(false)} icon={<Bell size={32} />}>
+            <div className="space-y-4">
+              <ToggleItem label="Transaction Alerts" sub="Real-time payment proof" active={notifPrefs.transactions} onToggle={() => toggleNotif('transactions')} />
+              <ToggleItem label="SMS Notifications" sub="Carrier network alerts" active={notifPrefs.sms} onToggle={() => toggleNotif('sms')} />
+              <ToggleItem label="Push Notifications" sub="App updates & offers" active={notifPrefs.push} onToggle={() => toggleNotif('push')} />
+            </div>
+          </SettingsModal>
+        )}
+
+        {showDevices && (
+          <SettingsModal title="Linked Devices" onClose={() => setShowDevices(false)} icon={<Smartphone size={32} />}>
+            <div className="space-y-6">
+              <div className="p-6 bg-primary-50 rounded-[2.5rem] border border-primary-100 flex items-center gap-4">
+                <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary-600 shadow-sm"><Smartphone size={24} /></div>
+                <div className="text-left">
+                  <p className="text-sm font-black text-primary-900">Galaxy S23 Ultra</p>
+                  <p className="text-[10px] font-bold text-green-600 uppercase tracking-widest">This Device (Active)</p>
                 </div>
               </div>
-            </motion.div>
-          </div>
+            </div>
+          </SettingsModal>
         )}
-      </AnimatePresence>
-      {/* Change PIN Modal */}
-      <AnimatePresence>
+
         {showChangePin && (
-          <div className="fixed inset-0 z-[120] flex items-end justify-center">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => { setShowChangePin(false); setNewPin(''); }}
-              className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" 
-            />
-            <motion.div
-              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
-              className="relative w-full max-w-md bg-white rounded-t-[3rem] p-10 pb-16 shadow-2xl"
-            >
-              <div className="w-12 h-1.5 bg-primary-100 rounded-full mx-auto mb-8" />
-              <div className="text-center mb-8">
-                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-4">
-                  <Lock size={32} />
-                </div>
-                <h3 className="text-2xl font-black text-primary-900">Change UPI PIN</h3>
-                <p className="text-[10px] text-primary-900/40 uppercase font-black tracking-widest">Update your secure authorization code</p>
+          <SettingsModal title="Change UPI PIN" onClose={() => { setShowChangePin(false); setNewPin(''); }} icon={<Lock size={32} />}>
+            <div className="space-y-6">
+              <div className="space-y-2 text-left">
+                <label className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest ml-2">New 4-Digit PIN</label>
+                <input
+                  type="password"
+                  maxLength={4}
+                  value={newPin}
+                  onChange={(e) => setNewPin(e.target.value)}
+                  placeholder="••••"
+                  className="w-full bg-primary-50 border border-primary-100 rounded-[2rem] py-5 px-8 text-3xl font-black text-center tracking-[1em] text-primary-900 focus:outline-none focus:border-primary-500"
+                />
               </div>
+              <motion.button whileTap={{ scale: 0.98 }} onClick={() => setShowChangePin(false)} className="w-full py-5 blue-gradient rounded-[2rem] font-black text-white uppercase tracking-widest shadow-lg">Update PIN</motion.button>
+            </div>
+          </SettingsModal>
+        )}
 
-              <div className="space-y-6">
-                <div className="space-y-2 text-left">
-                  <label className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest ml-2">New 4-Digit PIN</label>
-                  <input
-                    type="password"
-                    maxLength={4}
-                    value={newPin}
-                    onChange={(e) => setNewPin(e.target.value)}
-                    placeholder="••••"
-                    className="w-full bg-primary-50 border border-primary-100 rounded-[2rem] py-5 px-8 text-3xl font-black text-center tracking-[1em] text-primary-900 focus:outline-none focus:border-primary-500"
-                  />
-                </div>
-                <motion.button 
-                  whileTap={{ scale: 0.98 }}
-                  onClick={() => { setShowChangePin(false); setNewPin(''); }}
-                  className="w-full py-5 blue-gradient rounded-[2rem] font-black text-white uppercase tracking-widest shadow-lg"
-                >
-                  Update PIN
-                </motion.button>
-              </div>
-            </motion.div>
-          </div>
+        {showAddBank && (
+          <SettingsModal title="Add Bank Account" onClose={() => setShowAddBank(false)} icon={<Landmark size={32} />}>
+            <div className="grid grid-cols-2 gap-4">
+              <BankOption name="HDFC" icon={<Landmark size={24} />} onClick={() => setShowAddBank(false)} />
+              <BankOption name="SBI" icon={<Landmark size={24} />} onClick={() => setShowAddBank(false)} />
+              <BankOption name="ICICI" icon={<Landmark size={24} />} onClick={() => setShowAddBank(false)} />
+              <BankOption name="Axis" icon={<Landmark size={24} />} onClick={() => setShowAddBank(false)} />
+            </div>
+          </SettingsModal>
         )}
       </AnimatePresence>
     </div>
   );
 };
 
-const TabButton = ({ active, onClick, icon, label }) => (
-  <button 
-    onClick={onClick}
-    className={`flex-1 py-3.5 rounded-[1.8rem] flex items-center justify-center gap-2 transition-all duration-300 ${
-      active ? 'bg-white text-primary-600 shadow-sm' : 'text-primary-900/30'
-    }`}
-  >
-    {icon}
-    <span className="text-[11px] font-black uppercase tracking-widest">{label}</span>
-  </button>
+const SettingsModal = ({ title, onClose, icon, children }) => (
+  <div className="fixed inset-0 z-[120] flex items-end justify-center">
+    <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }} onClick={onClose} className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" />
+    <motion.div initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }} className="relative w-full max-w-md bg-white rounded-t-[3rem] p-10 pb-16 shadow-2xl">
+      <div className="w-12 h-1.5 bg-primary-100 rounded-full mx-auto mb-10" />
+      <div className="flex flex-col items-center text-center mb-10">
+        <div className="w-16 h-16 blue-gradient rounded-[1.8rem] flex items-center justify-center text-white shadow-xl mb-4">{icon}</div>
+        <h3 className="text-2xl font-black text-primary-900">{title}</h3>
+      </div>
+      {children}
+      <motion.button whileTap={{ scale: 0.95 }} onClick={onClose} className="w-full mt-10 py-5 bg-primary-900 rounded-[2rem] text-white font-black text-[12px] uppercase tracking-widest">Done</motion.button>
+    </motion.div>
+  </div>
 );
 
-const BankCard = ({ bank, onSwitch }) => (
-  <div className={`p-6 rounded-[2.5rem] border transition-all relative overflow-hidden ${
-    bank.isPrimary 
-      ? 'bg-primary-50 border-primary-200' 
-      : 'bg-white border-primary-100 opacity-60'
-  }`}>
-    <div className="flex justify-between items-start relative z-10">
-      <div className="flex gap-4">
-        <div className={`w-14 h-14 rounded-3xl flex items-center justify-center ${
-          bank.isPrimary ? 'blue-gradient' : 'bg-primary-100 text-primary-600'
-        }`}>
-          <Landmark size={28} />
-        </div>
-        <div className="space-y-1">
-          <div className="flex items-center gap-2">
-            <h5 className="font-black text-primary-900">{bank.name}</h5>
-            {bank.isPrimary && (
-              <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[7px] font-black uppercase rounded-lg border border-green-100">Primary</span>
-            )}
-          </div>
-          <p className="text-[10px] font-black text-primary-900/40 uppercase tracking-widest">{bank.accountNumber}</p>
-        </div>
-      </div>
-      <motion.button 
-        whileTap={{ scale: 0.9 }}
-        className="p-2 text-primary-300 hover:text-primary-600 transition-colors"
-      >
-        <MoreVertical size={20} />
-      </motion.button>
+const ToggleItem = ({ label, sub, active, onToggle }) => (
+  <div className="p-6 glass rounded-[2rem] border border-primary-50 flex items-center justify-between">
+    <div className="text-left">
+      <p className="text-sm font-black text-primary-900">{label}</p>
+      <p className="text-[10px] font-bold text-primary-900/30 uppercase tracking-widest mt-0.5">{sub}</p>
     </div>
-
-    <div className="mt-6 flex justify-between items-center relative z-10">
-      <div className="flex items-center gap-1">
-        <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-        <span className="text-[8px] font-black text-primary-900/40 uppercase tracking-widest">{bank.verified ? 'Verified' : 'Unverified'}</span>
-      </div>
-      {!bank.isPrimary && (
-        <motion.button 
-          whileTap={{ scale: 0.95 }}
-          onClick={onSwitch}
-          className="text-[10px] font-black uppercase text-primary-600 border-b border-primary-200"
-        >
-          Set Primary
-        </motion.button>
-      )}
-    </div>
-
-    {/* Background Pattern */}
-    <div className="absolute -bottom-6 -right-6 opacity-[0.03] rotate-12">
-      <Landmark size={120} />
-    </div>
+    <motion.button whileTap={{ scale: 0.9 }} onClick={onToggle} className={`w-14 h-8 rounded-full p-1.5 transition-colors ${active ? 'bg-primary-600' : 'bg-primary-100'}`}>
+      <motion.div animate={{ x: active ? 24 : 0 }} className="w-5 h-5 bg-white rounded-full shadow-md" />
+    </motion.button>
   </div>
 );
 
 const SettingsItem = ({ icon, label, sub, onClick }) => (
-  <motion.button 
-    whileTap={{ scale: 0.98 }}
-    onClick={onClick}
-    className="w-full flex items-center justify-between p-6 hover:bg-primary-50/50 transition-colors border-b border-primary-900/5 last:border-0 group"
-  >
-    <div className="flex items-center gap-5">
-      <div className="w-12 h-12 bg-primary-100 text-primary-600 rounded-2xl flex items-center justify-center group-hover:scale-110 transition-transform">
-        {icon}
-      </div>
-      <div className="text-left space-y-0.5">
-        <p className="font-black text-[15px] text-primary-900 group-hover:text-primary-600 transition-colors">{label}</p>
-        <p className="text-[9px] font-bold text-primary-900/30 uppercase tracking-widest">{sub}</p>
+  <motion.button whileTap={{ scale: 0.98 }} onClick={onClick} className="w-full p-6 flex items-center justify-between hover:bg-primary-50/50 transition-all border-b border-primary-900/5 last:border-0 text-left">
+    <div className="flex items-center gap-4">
+      <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center text-primary-600">{icon}</div>
+      <div className="space-y-0.5">
+        <p className="text-sm font-black text-primary-900 tracking-tight">{label}</p>
+        <p className="text-[10px] font-bold text-primary-900/20 uppercase tracking-widest">{sub}</p>
       </div>
     </div>
-    <ChevronRight className="text-primary-100" />
+    <ChevronRight className="text-primary-200" size={18} />
   </motion.button>
 );
 
-const BankOption = ({ name, icon }) => (
-  <motion.button 
-    whileHover={{ scale: 1.05, backgroundColor: 'rgba(59, 130, 246, 0.05)' }}
-    whileTap={{ scale: 0.95 }}
-    className="flex flex-col items-center gap-3 p-6 glass rounded-[2.5rem] border border-primary-900/5"
-  >
-    <div className="w-14 h-14 bg-primary-50 text-primary-600 rounded-3xl flex items-center justify-center">
-      {icon}
+const BankCard = ({ bank, onSwitch }) => (
+  <motion.div whileTap={{ scale: 0.98 }} onClick={onSwitch} className={`p-6 rounded-[2.5rem] border-2 transition-all cursor-pointer relative overflow-hidden group ${bank.isPrimary ? 'border-primary-500 bg-white shadow-xl' : 'border-primary-50 bg-primary-50/50'}`}>
+    <div className="flex justify-between items-start">
+      <div className="flex items-center gap-4">
+        <div className={`w-14 h-14 rounded-3xl flex items-center justify-center text-white shadow-lg ${bank.color}`}><Landmark size={28} /></div>
+        <div className="text-left">
+          <p className="text-lg font-black text-primary-900 tracking-tight">{bank.name}</p>
+          <p className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest">A/C: {bank.account}</p>
+        </div>
+      </div>
+      {bank.isPrimary && <div className="bg-primary-500 text-white px-3 py-1 rounded-full text-[8px] font-black uppercase tracking-widest shadow-lg">Primary</div>}
     </div>
+  </motion.div>
+);
+
+const BankOption = ({ name, icon, onClick }) => (
+  <motion.button whileTap={{ scale: 0.95 }} onClick={onClick} className="p-6 bg-primary-50 rounded-3xl border border-primary-100 flex flex-col items-center gap-2">
+    <div className="w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-primary-600 shadow-sm">{icon}</div>
     <span className="text-[10px] font-black uppercase tracking-widest text-primary-900">{name}</span>
   </motion.button>
+);
+
+const TabButton = ({ active, onClick, label }) => (
+  <motion.button whileTap={{ scale: 0.95 }} onClick={onClick} className={`flex-1 py-4 rounded-[1.8rem] text-[10px] font-black uppercase tracking-widest transition-all ${active ? 'bg-white text-primary-600 shadow-lg' : 'text-primary-900/30'}`}>{label}</motion.button>
 );
 
 export default ProfileScreen;
