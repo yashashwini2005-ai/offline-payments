@@ -6,8 +6,9 @@ import { TransactionQueue } from './TransactionQueue';
  */
 
 export class SyncEngine {
-  constructor(onStatusChange) {
+  constructor(onStatusChange, onSyncComplete) {
     this.onStatusChange = onStatusChange;
+    this.onSyncComplete = onSyncComplete;
     this.isSyncing = false;
     this.retryCount = 0;
   }
@@ -27,9 +28,9 @@ export class SyncEngine {
         return;
       }
 
-      // Simulate batch upload
+      // Instant batch upload simulation
       console.log(`Syncing ${pending.length} transactions...`);
-      await new Promise(resolve => setTimeout(resolve, 2000));
+      // await new Promise(resolve => setTimeout(resolve, 0)); 
 
       // Simulate random network failure during sync
       if (Math.random() > 0.9) throw new Error('Network Fluctuation');
@@ -42,6 +43,7 @@ export class SyncEngine {
       this.retryCount = 0;
       this.isSyncing = false;
       this.onStatusChange('ONLINE');
+      if (this.onSyncComplete) this.onSyncComplete();
       console.log('Sync Complete');
     } catch (e) {
       console.error('Sync Failed:', e.message);

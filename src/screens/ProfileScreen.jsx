@@ -7,12 +7,22 @@ import {
   Smartphone, Share2, Download, AlertCircle, Sparkles
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useLanguage } from '../context/LanguageContext';
 
 const ProfileScreen = () => {
   const { user, linkedBanks, navigateTo, switchPrimaryBank, setLinkedBanks, setUser } = useApp();
+  const { language, setLanguage, t } = useLanguage();
   const [showQR, setShowQR] = useState(false);
   const [showAddBank, setShowAddBank] = useState(false);
+  const [showLang, setShowLang] = useState(false);
   const [activeTab, setActiveTab] = useState('banks'); // banks, settings
+
+  const languages = [
+    { code: 'en', name: 'English', native: 'English' },
+    { code: 'hi', name: 'Hindi', native: 'हिन्दी' },
+    { code: 'kn', name: 'Kannada', native: 'ಕನ್ನಡ' },
+    { code: 'te', name: 'Telugu', native: 'తెలుగు' }
+  ];
 
   return (
     <div className="flex flex-col h-screen bg-premium-white overflow-hidden">
@@ -25,7 +35,7 @@ const ProfileScreen = () => {
         >
           <ChevronLeft size={24} strokeWidth={2.5} />
         </motion.button>
-        <h2 className="text-xl font-black tracking-tight text-primary-900">User Profile</h2>
+        <h2 className="text-xl font-black tracking-tight text-primary-900">{t('user_profile')}</h2>
         <motion.button 
           whileTap={{ scale: 0.9 }}
           className="p-3 bg-primary-50 rounded-2xl text-primary-600"
@@ -73,7 +83,7 @@ const ProfileScreen = () => {
                   <Sparkles size={18} />
                 </div>
                 <div className="text-left">
-                  <p className="text-[10px] font-black text-primary-900/40 uppercase tracking-widest">Profile Completion</p>
+                  <p className="text-[10px] font-black text-primary-900/40 uppercase tracking-widest">{t('profile_completion')}</p>
                   <p className="text-sm font-black text-primary-900">{user.completion}%</p>
                 </div>
               </div>
@@ -93,13 +103,13 @@ const ProfileScreen = () => {
               active={activeTab === 'banks'} 
               onClick={() => setActiveTab('banks')} 
               icon={<Landmark size={18} />} 
-              label="Payments" 
+              label={t('history')} 
             />
             <TabButton 
               active={activeTab === 'settings'} 
               onClick={() => setActiveTab('settings')} 
               icon={<ShieldCheck size={18} />} 
-              label="Settings" 
+              label={t('settings')} 
             />
           </div>
 
@@ -115,13 +125,13 @@ const ProfileScreen = () => {
                 {/* Linked Banks Section */}
                 <div className="space-y-4">
                   <div className="flex justify-between items-center px-1">
-                    <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">Linked Banks</h4>
+                    <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">{t('linked_banks')}</h4>
                     <motion.button 
                       onClick={() => setShowAddBank(true)}
                       whileTap={{ scale: 0.95 }}
                       className="text-[10px] font-black uppercase text-primary-600 flex items-center gap-1.5 px-3 py-1.5 bg-primary-50 rounded-xl"
                     >
-                      <Plus size={14} strokeWidth={3} /> Add New
+                      <Plus size={14} strokeWidth={3} /> {t('add_new')}
                     </motion.button>
                   </div>
                   
@@ -134,7 +144,7 @@ const ProfileScreen = () => {
 
                 {/* QR & UPI ID */}
                 <div className="space-y-4">
-                  <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">QR & UPI ID</h4>
+                  <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">{t('scan')} & UPI ID</h4>
                   <div 
                     onClick={() => setShowQR(true)}
                     className="p-6 glass rounded-[2.5rem] border border-primary-50 flex items-center justify-between cursor-pointer group"
@@ -144,7 +154,7 @@ const ProfileScreen = () => {
                         <QrCode size={28} />
                       </div>
                       <div className="text-left">
-                        <p className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest">Personal UPI ID</p>
+                        <p className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest">{t('personal_upi_id')}</p>
                         <p className="text-lg font-black text-primary-900 tracking-tight">{linkedBanks.find(b => b.isPrimary)?.upiId || 'yash@janpay'}</p>
                       </div>
                     </div>
@@ -162,29 +172,76 @@ const ProfileScreen = () => {
               >
                 <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">Account & Security</h4>
                 <div className="glass rounded-[2.5rem] border border-primary-50 overflow-hidden">
-                  <SettingsItem icon={<ShieldCheck size={20} />} label="Security Settings" sub="Password, Fingerprint, PIN" />
-                  <SettingsItem icon={<Bell size={20} />} label="Notification Prefs" sub="Alerts, SMS, Transaction History" />
-                  <SettingsItem icon={<Globe size={20} />} label="Language Selection" sub="English (India)" />
-                  <SettingsItem icon={<Smartphone size={20} />} label="Linked Devices" sub="Samsung S23 Ultra" />
+                  <SettingsItem icon={<ShieldCheck size={20} />} label={t('security_settings')} sub="Password, Fingerprint, PIN" />
+                  <SettingsItem icon={<Bell size={20} />} label={t('notification_prefs')} sub="Alerts, SMS, Transaction History" />
+                  <SettingsItem 
+                    onClick={() => setShowLang(true)}
+                    icon={<Globe size={20} />} 
+                    label={t('language_selection')} 
+                    sub={languages.find(l => l.code === language)?.native || 'English'} 
+                  />
+                  <SettingsItem icon={<Smartphone size={20} />} label={t('linked_devices')} sub="Samsung S23 Ultra" />
                 </div>
 
                 <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40 pt-4">Support & About</h4>
                 <div className="glass rounded-[2.5rem] border border-primary-50 overflow-hidden">
-                  <SettingsItem icon={<Headphones size={20} />} label="Help & Support" sub="24/7 Priority Assistance" />
-                  <SettingsItem icon={<AlertCircle size={20} />} label="About JanPay" sub="v8.0.10 Professional Edition" />
+                  <SettingsItem icon={<Headphones size={20} />} label={t('help_support')} sub="24/7 Priority Assistance" />
+                  <SettingsItem icon={<AlertCircle size={20} />} label={t('about_janpay')} sub="v8.0.10 Professional Edition" />
                 </div>
 
                 <motion.button 
                   whileTap={{ scale: 0.98 }}
                   className="w-full mt-6 py-5 bg-red-50 rounded-[2rem] flex items-center justify-center gap-3 text-red-600 font-black text-[12px] uppercase tracking-widest border border-red-100"
                 >
-                  <LogOut size={18} /> Log Out
+                  <LogOut size={18} /> {t('logout')}
                 </motion.button>
               </motion.div>
             )}
           </AnimatePresence>
         </div>
       </div>
+
+      {/* Language Modal */}
+      <AnimatePresence>
+        {showLang && (
+          <div className="fixed inset-0 z-[110] flex items-end justify-center">
+            <motion.div 
+              initial={{ opacity: 0 }} 
+              animate={{ opacity: 1 }} 
+              exit={{ opacity: 0 }}
+              onClick={() => setShowLang(false)}
+              className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" 
+            />
+            <motion.div
+              initial={{ y: '100%' }}
+              animate={{ y: 0 }}
+              exit={{ y: '100%' }}
+              className="relative w-full max-w-md bg-white rounded-t-[3rem] p-10 pb-16 shadow-2xl"
+            >
+              <div className="w-12 h-1.5 bg-primary-100 rounded-full mx-auto mb-8" />
+              <h3 className="text-2xl font-black text-primary-900 mb-2 text-center">{t('language_selection')}</h3>
+              
+              <div className="grid grid-cols-2 gap-4 mt-8">
+                {languages.map((lang) => (
+                  <motion.button
+                    key={lang.code}
+                    whileTap={{ scale: 0.95 }}
+                    onClick={() => { setLanguage(lang.code); setShowLang(false); }}
+                    className={`p-6 rounded-[2rem] border-2 transition-all flex flex-col items-center gap-2 ${
+                      language === lang.code 
+                        ? 'border-primary-500 bg-primary-50' 
+                        : 'border-primary-50 bg-white'
+                    }`}
+                  >
+                    <span className="text-lg font-black text-primary-900">{lang.native}</span>
+                    <span className="text-[10px] font-bold text-primary-400 uppercase tracking-widest">{lang.name}</span>
+                  </motion.button>
+                ))}
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
 
       {/* QR Modal */}
       <AnimatePresence>
@@ -343,9 +400,10 @@ const BankCard = ({ bank, onSwitch }) => (
   </div>
 );
 
-const SettingsItem = ({ icon, label, sub }) => (
+const SettingsItem = ({ icon, label, sub, onClick }) => (
   <motion.button 
     whileTap={{ scale: 0.98 }}
+    onClick={onClick}
     className="w-full flex items-center justify-between p-6 hover:bg-primary-50/50 transition-colors border-b border-primary-900/5 last:border-0 group"
   >
     <div className="flex items-center gap-5">

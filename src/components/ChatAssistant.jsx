@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { MessageCircle, X, Send, Sparkles, Bot } from 'lucide-react';
+import { useLanguage } from '../context/LanguageContext';
 
 const ChatAssistant = () => {
+  const { t } = useLanguage();
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
     { role: 'bot', content: "Hello! I'm JanPay AI. How can I help you with your offline payments today?" }
@@ -31,6 +33,7 @@ const ChatAssistant = () => {
           animate={{ scale: [1, 1.2, 1] }}
           transition={{ duration: 2, repeat: Infinity }}
           className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-white"
+          title={t('syncing')}
         />
       </motion.button>
 
@@ -50,8 +53,8 @@ const ChatAssistant = () => {
                     <Sparkles className="text-white" size={24} />
                   </div>
                   <div>
-                    <h3 className="font-black text-white text-lg tracking-tight">JanPay AI</h3>
-                    <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">Smart Assistant</p>
+                    <h3 className="font-black text-white text-lg tracking-tight">{t('ai_assistant')}</h3>
+                    <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">{t('smart_assistant')}</p>
                   </div>
                 </div>
                 <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
@@ -71,7 +74,7 @@ const ChatAssistant = () => {
                     <div className={`max-w-[80%] p-5 rounded-[2rem] text-sm font-bold leading-relaxed shadow-sm ${
                       msg.role === 'bot' 
                         ? 'bg-white text-primary-900 rounded-tl-none border border-primary-100' 
-                        : 'blue-gradient rounded-br-none'
+                        : 'blue-gradient rounded-br-none text-white'
                     }`}>
                       {msg.content}
                     </div>
@@ -87,7 +90,7 @@ const ChatAssistant = () => {
                     value={input}
                     onChange={(e) => setInput(e.target.value)}
                     onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                    placeholder="Ask about offline limits..."
+                    placeholder={t('ask_about')}
                     className="flex-1 bg-primary-50 border border-primary-100 rounded-2xl px-6 py-4 text-sm font-bold text-primary-900 focus:outline-none focus:border-primary-500 transition-all"
                   />
                   <button

@@ -72,7 +72,12 @@ export const AppProvider = ({ children }) => {
         setOfflineTokens(t);
         setOfflineBalance(t.reduce((sum, tk) => sum + tk.amount, 0));
 
-        syncEngineRef.current = new SyncEngine((state) => setNetworkState(state));
+        const refreshHistory = async () => {
+          const updatedLedger = await TransactionQueue.getLedger();
+          setHistory(updatedLedger);
+        };
+
+        syncEngineRef.current = new SyncEngine((state) => setNetworkState(state), refreshHistory);
         monitorRef.current = new ConnectivityMonitor((state) => {
           setNetworkState(state);
           if (state === NETWORK_STATE.RECONNECTED || state === NETWORK_STATE.ONLINE) {

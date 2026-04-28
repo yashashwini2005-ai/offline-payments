@@ -23,7 +23,7 @@ export class ConnectivityMonitor {
 
   start() {
     this.checkConnectivity();
-    this.interval = setInterval(() => this.checkConnectivity(), 5000);
+    this.interval = setInterval(() => this.checkConnectivity(), 1000);
   }
 
   stop() {
@@ -38,14 +38,14 @@ export class ConnectivityMonitor {
 
     try {
       const start = Date.now();
-      // Ping a reliable endpoint (simulated)
+      // Faster ping simulation
       await fetch('https://www.google.com/favicon.ico', { mode: 'no-cors', cache: 'no-store' });
       const latency = Date.now() - start;
 
       if (latency > this.latencyThreshold) {
         this.updateState(NETWORK_STATE.UNSTABLE);
       } else {
-        const newState = this.state === NETWORK_STATE.OFFLINE ? NETWORK_STATE.RECONNECTED : NETWORK_STATE.ONLINE;
+        const newState = (this.state === NETWORK_STATE.OFFLINE || this.state === NETWORK_STATE.UNSTABLE) ? NETWORK_STATE.RECONNECTED : NETWORK_STATE.ONLINE;
         this.updateState(newState);
       }
     } catch (e) {
@@ -58,9 +58,9 @@ export class ConnectivityMonitor {
       this.state = newState;
       this.onStateChange(newState);
       
-      // If reconnected, transition to online after notification
+      // If reconnected, transition to online quickly after triggering sync
       if (newState === NETWORK_STATE.RECONNECTED) {
-        setTimeout(() => this.updateState(NETWORK_STATE.ONLINE), 2000);
+        setTimeout(() => this.updateState(NETWORK_STATE.ONLINE), 400);
       }
     }
   }
