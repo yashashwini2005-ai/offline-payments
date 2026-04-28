@@ -1,74 +1,96 @@
-// Simulated Central Bank Server
-const WALLET_KEY = 'upi_wallet_balance';
-const MASTER_SECRET = 'janpay-secure-secret-2024';
+/**
+ * BankServer.js
+ * Simulated Central Bank Server for wallet management and token signing.
+ * Implements HMAC-SHA256 digital signatures using Web Crypto API.
+ */
+
+const MASTER_SECRET = 'JANPAY_BANK_MASTER_KEY_2024';
+const INITIAL_BALANCE = 50000;
 
 export class BankServer {
   static async getBalance() {
-    const balance = localStorage.getItem(WALLET_KEY);
-    if (balance === null) {
-      localStorage.setItem(WALLET_KEY, '10000');
-      return 10000;
+    const b = localStorage.getItem('upi_wallet_balance');
+    if (b === null) {
+      // First time initialization
+      localStorage.setItem('upi_wallet_balance', INITIAL_BALANCE.toString());
+      return INITIAL_BALANCE;
     }
-    return parseFloat(balance);
+    return parseFloat(b);
   }
 
   static async updateBalance(newBalance) {
-    localStorage.setItem(WALLET_KEY, newBalance.toString());
+    localStorage.setItem('upi_wallet_balance', newBalance.toString());
   }
 
   static async signToken(amount) {
     const encoder = new TextEncoder();
-    const data = {
-      id: crypto.randomUUID(),
-      amount,
-      timestamp: Date.now()
-    };
-    
-    const message = JSON.stringify(data);
     const keyData = encoder.encode(MASTER_SECRET);
-    const msgData = encoder.encode(message);
-
     const key = await crypto.subtle.importKey(
       'raw',
       keyData,
       { name: 'HMAC', hash: 'SHA-256' },
       false,
-      ['sign', 'verify']
+      ['sign']
     );
+
+    const tokenId = crypto.randomUUID();
+    const timestamp = Date.now();
+    const expiry = timestamp + (48 * 60 * 60 * 1000); // 48 Hours Expiry for production simulation
+
+    const payload = JSON.stringify({
+      id: tokenId,
+      amount,
+      timestamp,
+      expiry,
+      bankId: 'JANPAY_CENTRAL_BANK',
+      authorizedBy: 'RESERVE_BANK_SIM'
+    });
 
     const signature = await crypto.subtle.sign(
       'HMAC',
       key,
-      msgData
+      encoder.encode(payload)
     );
 
     return {
-      ...data,
-      signature: btoa(String.fromCharCode(...new Uint8Array(signature)))
+      id: tokenId,
+      amount,
+      timestamp,
+      expiry,
+      signature: btoa(String.fromCharCode(...new Uint8Array(signature))),
+      payload
     };
   }
 
   static async verifyToken(token) {
-    const { signature, ...data } = token;
-    const encoder = new TextEncoder();
-    const message = JSON.stringify(data);
-    const keyData = encoder.encode(MASTER_SECRET);
-    const msgData = encoder.encode(message);
-    const sigData = new Uint8Array(atob(signature).split('').map(c => c.charCodeAt(0)));
+    try {
+      const encoder = new TextEncoder();
+      const keyData = encoder.encode(MASTER_SECRET);
+      const key = await crypto.subtle.importKey(
+        'raw',
+        keyData,
+        { name: 'HMAC', hash: 'SHA-256' },
+        false,
+        ['verify']
+      );
 
-    const key = await crypto.subtle.importKey(
-      'raw',
-      keyData,
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['verify']
-    );
+      const signature = new Uint8Array(
+        atob(token.signature).split('').map(c => c.charCodeAt(0))
+      );
 
-    return await crypto.subtle.verify(
-      'HMAC',
-      key,
-      sigData,
-      msgData
-    );
+      const isValid = await crypto.subtle.verify(
+        'HMAC',
+        key,
+        signature,
+        encoder.encode(token.payload)
+      );
+
+      const isExpired = Date.now() > token.expiry;
+
+      return isValid && !isExpired;
+    } catch (e) {
+      console.error('Cryptographic Verification Failed:', e);
+      return false;
+    }
   }
 }

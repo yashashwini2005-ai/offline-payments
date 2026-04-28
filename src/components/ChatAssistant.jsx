@@ -1,157 +1,108 @@
-import React, { useState, useRef, useEffect } from 'react';
-import { MessageSquare, X, Send, Mic, Bot, Sparkles } from 'lucide-react';
+import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import GlassCard from './GlassCard';
+import { MessageCircle, X, Send, Sparkles, Bot } from 'lucide-react';
 
 const ChatAssistant = () => {
   const [isOpen, setIsOpen] = useState(false);
   const [messages, setMessages] = useState([
-    { text: "Hello! I'm your JanPay AI Assistant. I can help you with transfers, checking tokens, or explaining offline payments.", sender: 'ai' }
+    { role: 'bot', content: "Hello! I'm JanPay AI. How can I help you with your offline payments today?" }
   ]);
   const [input, setInput] = useState('');
-  const scrollRef = useRef(null);
-
-  useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
-    }
-  }, [messages, isOpen]);
 
   const handleSend = () => {
     if (!input.trim()) return;
-    const userMsg = { text: input, sender: 'user' };
-    setMessages([...messages, userMsg]);
+    setMessages([...messages, { role: 'user', content: input }]);
     setInput('');
-    
-    // Simulate AI response with typing effect
     setTimeout(() => {
-      setMessages(prev => [...prev, { text: "Analyzing your request...", sender: 'ai', isTyping: true }]);
-      
-      setTimeout(() => {
-        setMessages(prev => [
-          ...prev.filter(m => !m.isTyping),
-          { text: "This is a Gold Build demonstration. My logic circuits are processing your request with premium precision.", sender: 'ai' }
-        ]);
-      }, 1500);
-    }, 500);
+      setMessages(prev => [...prev, { role: 'bot', content: "I'm a simulation of JanPay's smart assistant. I can help you understand token minting, daily limits (₹1000), and how to sync your offline transactions!" }]);
+    }, 1000);
   };
 
   return (
-    <div className="fixed bottom-6 right-6 z-[200]">
+    <>
+      <motion.button
+        whileHover={{ scale: 1.1, rotate: 5 }}
+        whileTap={{ scale: 0.9 }}
+        onClick={() => setIsOpen(true)}
+        className="fixed bottom-24 right-6 w-16 h-16 blue-gradient rounded-full flex items-center justify-center shadow-2xl z-40 border-4 border-white"
+      >
+        <Bot size={30} className="text-white" />
+        <motion.div
+          animate={{ scale: [1, 1.2, 1] }}
+          transition={{ duration: 2, repeat: Infinity }}
+          className="absolute -top-1 -right-1 w-5 h-5 bg-green-500 rounded-full border-4 border-white"
+        />
+      </motion.button>
+
       <AnimatePresence>
         {isOpen && (
           <motion.div
-            initial={{ opacity: 0, scale: 0.9, y: 50, filter: 'blur(10px)' }}
-            animate={{ opacity: 1, scale: 1, y: 0, filter: 'blur(0px)' }}
-            exit={{ opacity: 0, scale: 0.9, y: 50, filter: 'blur(10px)' }}
-            className="absolute bottom-20 right-0 w-[320px] h-[480px] mb-4"
+            initial={{ opacity: 0, y: 100, scale: 0.8 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: 100, scale: 0.8 }}
+            className="fixed inset-0 z-50 flex items-center justify-center p-6 bg-primary-900/20 backdrop-blur-sm"
           >
-            <GlassCard premium className="h-full flex flex-col p-0 shadow-[0_30px_100px_rgba(0,0,0,0.5)] border-gold-500/20 overflow-hidden rounded-[2.5rem]">
-              {/* Chat Header */}
-              <div className="p-6 gold-gradient flex justify-between items-center shadow-lg">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-black/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
-                    <Bot size={24} className="text-white" />
+            <div className="w-full max-w-md bg-white rounded-[3rem] overflow-hidden shadow-2xl flex flex-col h-[70vh] border border-primary-100">
+              {/* Header */}
+              <div className="blue-gradient p-8 flex justify-between items-center relative">
+                <div className="flex items-center gap-4">
+                  <div className="w-12 h-12 bg-white/20 rounded-2xl flex items-center justify-center backdrop-blur-md">
+                    <Sparkles className="text-white" size={24} />
                   </div>
                   <div>
-                    <h3 className="font-black text-sm tracking-tight text-premium-dark uppercase">JanPay AI</h3>
-                    <div className="flex items-center gap-1">
-                      <div className="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse" />
-                      <span className="text-[8px] font-black text-premium-dark/60 uppercase">Protocol Active</span>
-                    </div>
+                    <h3 className="font-black text-white text-lg tracking-tight">JanPay AI</h3>
+                    <p className="text-white/60 text-[10px] font-black uppercase tracking-widest">Smart Assistant</p>
                   </div>
                 </div>
-                <button 
-                  onClick={() => setIsOpen(false)} 
-                  className="w-8 h-8 bg-black/10 rounded-xl flex items-center justify-center text-premium-dark/60 hover:bg-black/20 transition-all"
-                >
-                  <X size={18} strokeWidth={3} />
+                <button onClick={() => setIsOpen(false)} className="p-2 hover:bg-white/10 rounded-xl transition-colors">
+                  <X size={24} className="text-white" />
                 </button>
               </div>
-              
-              {/* Messages Area */}
-              <div ref={scrollRef} className="flex-1 overflow-y-auto p-6 space-y-4 scrollbar-hide bg-black/20">
+
+              {/* Messages */}
+              <div className="flex-1 overflow-y-auto p-8 space-y-6 scrollbar-hide bg-primary-50/30">
                 {messages.map((msg, i) => (
-                  <motion.div 
-                    key={i} 
-                    initial={{ opacity: 0, y: 10, scale: 0.95 }}
-                    animate={{ opacity: 1, y: 0, scale: 1 }}
-                    className={`flex ${msg.sender === 'user' ? 'justify-end' : 'justify-start'}`}
+                  <motion.div
+                    key={i}
+                    initial={{ opacity: 0, x: msg.role === 'bot' ? -20 : 20 }}
+                    animate={{ opacity: 1, x: 0 }}
+                    className={`flex ${msg.role === 'bot' ? 'justify-start' : 'justify-end'}`}
                   >
-                    <div className={`max-w-[85%] p-4 rounded-[1.5rem] text-[13px] font-medium leading-relaxed shadow-sm ${
-                      msg.sender === 'user' 
-                        ? 'bg-gold-500 text-premium-dark rounded-tr-none font-bold italic' 
-                        : 'bg-white/[0.06] text-white/90 rounded-tl-none border border-white/[0.05] backdrop-blur-md'
+                    <div className={`max-w-[80%] p-5 rounded-[2rem] text-sm font-bold leading-relaxed shadow-sm ${
+                      msg.role === 'bot' 
+                        ? 'bg-white text-primary-900 rounded-tl-none border border-primary-100' 
+                        : 'blue-gradient rounded-br-none'
                     }`}>
-                      {msg.text}
-                      {msg.isTyping && (
-                        <div className="flex gap-1 mt-2">
-                          <div className="w-1 h-1 bg-gold-400 rounded-full animate-bounce" />
-                          <div className="w-1 h-1 bg-gold-400 rounded-full animate-bounce [animation-delay:0.2s]" />
-                          <div className="w-1 h-1 bg-gold-400 rounded-full animate-bounce [animation-delay:0.4s]" />
-                        </div>
-                      )}
+                      {msg.content}
                     </div>
                   </motion.div>
                 ))}
               </div>
 
-              {/* Chat Input */}
-              <div className="p-5 bg-black/40 border-t border-white/5">
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 relative group">
-                    <input
-                      type="text"
-                      value={input}
-                      onChange={(e) => setInput(e.target.value)}
-                      onKeyPress={(e) => e.key === 'Enter' && handleSend()}
-                      placeholder="Ask JanPay..."
-                      className="w-full bg-white/[0.04] border border-white/10 rounded-2xl py-3.5 pl-5 pr-10 text-[13px] text-white focus:outline-none focus:border-gold-500/50 focus:bg-white/[0.08] transition-all"
-                    />
-                    <button className="absolute right-3 top-1/2 -translate-y-1/2 text-white/20 hover:text-gold-400 transition-colors">
-                      <Mic size={18} />
-                    </button>
-                  </div>
-                  <motion.button 
-                    whileHover={{ scale: 1.1, rotate: -10 }}
-                    whileTap={{ scale: 0.9 }}
+              {/* Input */}
+              <div className="p-6 bg-white border-t border-primary-100">
+                <div className="flex gap-3">
+                  <input
+                    type="text"
+                    value={input}
+                    onChange={(e) => setInput(e.target.value)}
+                    onKeyPress={(e) => e.key === 'Enter' && handleSend()}
+                    placeholder="Ask about offline limits..."
+                    className="flex-1 bg-primary-50 border border-primary-100 rounded-2xl px-6 py-4 text-sm font-bold text-primary-900 focus:outline-none focus:border-primary-500 transition-all"
+                  />
+                  <button
                     onClick={handleSend}
-                    className="w-12 h-12 gold-gradient rounded-2xl flex items-center justify-center text-premium-dark shadow-lg"
+                    className="w-14 h-14 blue-gradient rounded-2xl flex items-center justify-center shadow-lg shadow-primary-500/20 active:scale-95 transition-all"
                   >
-                    <Send size={20} strokeWidth={2.5} />
-                  </motion.button>
+                    <Send size={20} className="text-white" />
+                  </button>
                 </div>
               </div>
-            </GlassCard>
+            </div>
           </motion.div>
         )}
       </AnimatePresence>
-
-      <motion.button
-        whileHover={{ scale: 1.1, rotate: 12 }}
-        whileTap={{ scale: 0.9, rotate: -12 }}
-        onClick={() => setIsOpen(!isOpen)}
-        className={`w-16 h-16 rounded-[1.8rem] transition-all duration-500 flex items-center justify-center shadow-2xl relative overflow-hidden group ${
-          isOpen ? 'bg-premium-dark border-2 border-white/10' : 'gold-gradient'
-        }`}
-      >
-        <div className="absolute inset-0 bg-white/20 opacity-0 group-hover:opacity-100 transition-opacity" />
-        {isOpen ? (
-          <X size={32} className="text-white" strokeWidth={2.5} />
-        ) : (
-          <div className="relative">
-            <MessageSquare size={32} className="text-premium-dark" strokeWidth={2.5} />
-            <motion.div 
-              animate={{ opacity: [0, 1, 0], scale: [1, 1.5, 1] }}
-              transition={{ duration: 2, repeat: Infinity }}
-              className="absolute -top-1 -right-1"
-            >
-              <Sparkles size={14} className="text-premium-dark" />
-            </motion.div>
-          </div>
-        )}
-      </motion.button>
-    </div>
+    </>
   );
 };
 

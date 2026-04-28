@@ -1,31 +1,40 @@
 import React, { useState, useEffect } from 'react';
-import { Send, Download, ScanLine, Wallet, Wifi, WifiOff, ArrowUpRight, ArrowDownLeft, Coins, Plus, History, QrCode, Search, Bell, User } from 'lucide-react';
+import { Send, Download, ScanLine, Wallet, Wifi, WifiOff, ArrowUpRight, ArrowDownLeft, Coins, Plus, History, QrCode, Search, Bell, User, AlertTriangle, RefreshCw, ShieldAlert, CreditCard, ChevronRight } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../context/AppContext';
-import GlassCard from '../components/GlassCard';
 
 const HomeScreen = () => {
-  const { balance, offlineBalance, offlineTokens, history, isOnline, navigateTo, convertToTokens } = useApp();
+  const { balance, offlineBalance, history, networkState, tamperDetected, navigateTo, requestPreload, user } = useApp();
   const [showConvert, setShowConvert] = useState(false);
   const [showQR, setShowQR] = useState(false);
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
-    // Simulate initial data fetch for skeleton loading
     const timer = setTimeout(() => setIsLoading(false), 500);
     return () => clearTimeout(timer);
   }, []);
 
   const handleConvert = async () => {
     const val = parseFloat(amount);
-    if (val > 0 && val <= balance) {
-      const success = await convertToTokens(val);
-      if (success) {
-        setShowConvert(false);
-        setAmount('');
-      }
+    if (!val || val <= 0) {
+      setError('Enter a valid amount');
+      return;
     }
+    if (val > balance) {
+      setError('Insufficient wallet balance');
+      return;
+    }
+    if (offlineBalance + val > 1000) {
+      setError('Offline limit: ₹1,000 max');
+      return;
+    }
+
+    setError('');
+    requestPreload(val);
+    setShowConvert(false);
+    setAmount('');
   };
 
   const simulateQRScan = () => {
@@ -36,366 +45,320 @@ const HomeScreen = () => {
     }, 2000);
   };
 
+  if (tamperDetected) return <TamperScreen />;
   if (isLoading) return <HomeSkeleton />;
 
   return (
-    <div className="p-6 pt-12 space-y-8 pb-32 overflow-y-auto max-h-screen scrollbar-hide">
-      {/* Premium Header */}
-      <div className="flex justify-between items-start">
-        <motion.div 
-          initial={{ opacity: 0, x: -20 }}
-          animate={{ opacity: 1, x: 0 }}
-          className="space-y-1"
+    <div className="p-6 pt-12 space-y-8 pb-32 overflow-y-auto max-h-screen scrollbar-hide bg-premium-white">
+      {/* Header */}
+      <div className="flex justify-between items-center">
+        <div 
+          className="flex items-center gap-3 cursor-pointer group"
+          onClick={() => navigateTo('profile')}
         >
-          <p className="text-white/40 text-[10px] font-black uppercase tracking-[0.2em]">Premium Account</p>
-          <h1 className="text-2xl font-black tracking-tight font-display italic">JanPay</h1>
-        </motion.div>
+          <div className="w-10 h-10 rounded-full blue-gradient p-0.5 shadow-md group-hover:scale-110 transition-transform">
+            <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
+              <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
+            </div>
+          </div>
+          <div>
+            <p className="text-primary-900/40 text-[10px] font-bold uppercase tracking-widest">Account Holder</p>
+            <h1 className="text-xl font-black tracking-tight text-primary-900 group-hover:text-primary-600 transition-colors">{user.name}</h1>
+          </div>
+        </div>
         
         <div className="flex items-center gap-3">
-          <motion.button 
-            whileHover={{ scale: 1.1, backgroundColor: 'rgba(255,255,255,0.05)' }}
-            whileTap={{ scale: 0.9 }}
-            className="p-2.5 glass rounded-2xl text-white/60"
-          >
-            <Bell size={18} />
-          </motion.button>
-          
-          <motion.div 
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            className={`flex items-center gap-2 px-3 py-2 rounded-2xl text-[10px] font-black uppercase tracking-tighter border transition-all duration-700 ${
-              isOnline 
-                ? 'bg-green-500/10 text-green-500 border-green-500/20 shadow-[0_0_15px_rgba(34,197,94,0.1)]' 
-                : 'bg-red-500/10 text-red-500 border-red-500/20 shadow-[0_0_15px_rgba(239,68,68,0.1)]'
-            }`}
-          >
-            <div className={`w-1.5 h-1.5 rounded-full ${isOnline ? 'bg-green-500 animate-pulse' : 'bg-red-500'}`} />
-            {isOnline ? 'Online' : 'Offline'}
+          <motion.div whileTap={{ scale: 0.9 }} className="p-2.5 glass rounded-xl relative">
+            <Bell size={20} className="text-primary-600" />
+            <div className="absolute top-2 right-2 w-2 h-2 bg-primary-500 rounded-full border-2 border-white" />
           </motion.div>
+          <NetworkBadge state={networkState} />
         </div>
       </div>
 
-      {/* Main Balance Card - Gold Build Version */}
+      {/* Wallet Card */}
       <motion.div
-        initial={{ opacity: 0, y: 30 }}
-        animate={{ opacity: 1, y: 0 }}
-        transition={{ type: "spring", damping: 15 }}
+        initial={{ opacity: 0, scale: 0.95 }}
+        animate={{ opacity: 1, scale: 1 }}
       >
-        <GlassCard premium className="relative group p-8">
-          <div className="absolute -top-12 -right-12 opacity-[0.05] group-hover:opacity-[0.12] transition-opacity duration-1000 rotate-12">
-            <Wallet size={200} className="text-gold-500" />
+        <div className="relative group overflow-hidden rounded-[2.5rem] blue-gradient p-8 shadow-2xl shadow-primary-500/20">
+          <div className="absolute top-0 right-0 p-4 opacity-10">
+            <CreditCard size={140} />
           </div>
           
-          <div className="space-y-1 relative z-10">
-            <div className="flex items-center gap-2 mb-2">
-              <span className="text-[10px] font-black text-gold-500/60 uppercase tracking-widest">Main Balance</span>
-              <div className="h-px flex-1 bg-gradient-to-r from-gold-500/20 to-transparent" />
-            </div>
-            <div className="flex items-baseline gap-1.5">
-              <span className="text-gold-400 text-3xl font-black font-display italic">₹</span>
-              <h2 className="text-5xl font-black tracking-tighter font-display">{balance.toLocaleString()}</h2>
-            </div>
-          </div>
-
-          <div className="mt-10 flex justify-between items-end relative z-10">
-            <div className="space-y-1">
-              <p className="text-white/30 text-[9px] font-black uppercase tracking-[0.2em]">Offline Reserve</p>
-              <div className="flex items-baseline gap-1">
-                <span className="text-gold-300 text-sm font-bold">₹</span>
-                <p className="text-2xl font-black text-gold-300/90 font-display italic">{offlineBalance}</p>
+          <div className="space-y-6 relative z-10">
+            <div className="flex justify-between items-center">
+              <div className="space-y-1">
+                <span className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">Total Balance</span>
+                <div className="flex items-baseline gap-1.5">
+                  <span className="text-white/80 text-2xl font-black">₹</span>
+                  <h2 className="text-4xl font-black tracking-tighter text-white">{balance.toLocaleString()}</h2>
+                </div>
+              </div>
+              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border border-white/30">
+                <Wallet size={28} />
               </div>
             </div>
-            <motion.button
-              whileHover={{ scale: 1.05, boxShadow: '0 0 20px rgba(212, 175, 55, 0.3)' }}
-              whileTap={{ scale: 0.95 }}
-              onClick={() => setShowConvert(true)}
-              className="px-5 py-3 gold-gradient rounded-2xl text-[11px] uppercase font-black text-premium-dark flex items-center gap-2 border border-white/20"
-            >
-              <Plus size={16} strokeWidth={4} />
-              Convert
-            </motion.button>
+
+            <div className="h-px bg-white/20" />
+
+            <div className="flex justify-between items-end">
+              <div className="space-y-1">
+                <div className="flex items-center gap-2">
+                  <span className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em]">Offline Reserve</span>
+                  <div className={`w-2 h-2 rounded-full ${offlineBalance >= 1000 ? 'bg-orange-400' : 'bg-white'} animate-pulse`} />
+                </div>
+                <div className="flex items-baseline gap-1">
+                  <span className="text-white/80 text-lg font-bold">₹</span>
+                  <p className="text-2xl font-black text-white italic">{offlineBalance}</p>
+                  <span className="text-[10px] text-white/40 font-bold ml-1">/ 1,000</span>
+                </div>
+              </div>
+              
+              <motion.button
+                whileHover={{ scale: 1.05 }}
+                whileTap={{ scale: 0.95 }}
+                onClick={() => setShowConvert(true)}
+                className="px-6 py-3 bg-white text-primary-700 rounded-2xl text-[10px] uppercase font-black shadow-lg shadow-black/5 flex items-center gap-2"
+              >
+                <Plus size={14} strokeWidth={4} />
+                Load Reserve
+              </motion.button>
+            </div>
           </div>
-        </GlassCard>
+        </div>
       </motion.div>
 
       {/* Grid Quick Actions */}
-      <div className="grid grid-cols-3 gap-5">
-        <ActionButton 
-          delay={0.1}
-          icon={<Send size={26} strokeWidth={2.5} />} 
-          label="Transfer" 
-          onClick={() => navigateTo('payment')} 
-        />
-        <ActionButton 
-          delay={0.2}
-          icon={<ArrowDownLeft size={26} strokeWidth={2.5} />} 
-          label="Deposit" 
-          onClick={() => {}} 
-        />
-        <ActionButton 
-          delay={0.3}
-          icon={<QrCode size={26} strokeWidth={2.5} />} 
-          label="Scan QR" 
-          onClick={simulateQRScan} 
-        />
+      <div className="grid grid-cols-4 gap-4">
+        <QuickAction icon={<Send size={22} />} label="Send" onClick={() => navigateTo('payment')} />
+        <QuickAction icon={<Download size={22} />} label="Request" />
+        <QuickAction icon={<ScanLine size={22} />} label="Scan" onClick={simulateQRScan} />
+        <QuickAction icon={<History size={22} />} label="History" />
       </div>
 
-      {/* Enhanced Tokens List */}
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 0.4 }}
-        className="space-y-5 pt-2"
-      >
-        <div className="flex justify-between items-end px-1">
-          <div className="space-y-1">
-            <h3 className="text-xs font-black uppercase tracking-[0.15em] text-white/50">Digital Assets</h3>
-            <p className="text-[10px] text-gold-500/50 font-bold uppercase">Cryptographically Signed</p>
-          </div>
-          <span className="text-[10px] bg-gold-500/5 text-gold-400 px-3 py-1.5 rounded-full border border-gold-500/10 font-black uppercase tracking-tighter">
-            {offlineTokens.length} Tokens
-          </span>
-        </div>
-        <div className="flex gap-4 overflow-x-auto pb-4 scrollbar-hide -mx-2 px-2">
-          {offlineTokens.length === 0 ? (
-            <div className="w-full py-8 glass rounded-[2rem] border-dashed border-white/5 flex flex-col items-center gap-3 opacity-40">
-              <Coins size={32} className="text-white/20" />
-              <p className="text-[10px] font-black uppercase tracking-widest">No Active Tokens</p>
-            </div>
-          ) : (
-            offlineTokens.map((token, i) => (
-              <TokenChip key={token.id} index={i} amount={token.amount} />
-            ))
-          )}
-        </div>
-      </motion.div>
-
-      {/* Transaction History Section */}
+      {/* Transaction History */}
       <div className="space-y-5 pt-2">
         <div className="flex justify-between items-center px-1">
-          <h3 className="text-xs font-black uppercase tracking-[0.15em] text-white/50">Activity Ledger</h3>
+          <h3 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">Transaction History</h3>
           <motion.button 
-            whileHover={{ x: 3 }}
-            className="text-[10px] font-black uppercase text-gold-500 flex items-center gap-1"
+            whileHover={{ x: 2 }}
+            className="text-[10px] font-black uppercase text-primary-600 flex items-center gap-1 group"
           >
-            See All <Search size={12} strokeWidth={3} />
+            See All <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
           </motion.button>
         </div>
         
-        <div className="space-y-4">
+        <div className="space-y-3">
           {history.length === 0 ? (
-            <div className="text-center py-16 glass rounded-[2.5rem] border-dashed border-white/10">
-              <motion.div
-                animate={{ rotate: [0, 10, -10, 0] }}
-                transition={{ duration: 4, repeat: Infinity }}
-              >
-                <History size={48} className="mx-auto text-white/10 mb-4" />
-              </motion.div>
-              <p className="text-white/20 text-xs font-black uppercase tracking-widest">System Clear</p>
+            <div className="text-center py-12 glass rounded-[2.5rem] border-dashed border-primary-900/10">
+              <p className="text-primary-900/20 text-[10px] font-black uppercase tracking-widest">No Recent Activity</p>
             </div>
           ) : (
-            history.map((tx, i) => (
+            history.slice().reverse().map((tx, i) => (
               <TransactionItem key={tx.id} index={i} tx={tx} />
             ))
           )}
         </div>
       </div>
 
-      {/* Modal & Overlays */}
+      {/* Conversion Modal */}
       <AnimatePresence>
         {showConvert && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-6">
+          <div className="fixed inset-0 z-50 flex items-end justify-center">
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              onClick={() => setShowConvert(false)}
-              className="absolute inset-0 bg-black/90 backdrop-blur-xl"
+              onClick={() => { setShowConvert(false); setError(''); }}
+              className="absolute inset-0 bg-primary-900/40 backdrop-blur-sm"
             />
             <motion.div
-              initial={{ scale: 0.8, opacity: 0, rotateX: 20 }}
-              animate={{ scale: 1, opacity: 1, rotateX: 0 }}
-              exit={{ scale: 0.8, opacity: 0, rotateX: 20 }}
-              className="relative w-full max-w-xs"
+              initial={{ y: "100%" }}
+              animate={{ y: 0 }}
+              exit={{ y: "100%" }}
+              transition={{ type: "spring", damping: 25, stiffness: 200 }}
+              className="relative w-full max-w-md bg-white rounded-t-[3rem] p-10 pb-16 shadow-2xl"
             >
-              <GlassCard premium className="p-10 border-gold-500/30 shadow-[0_0_100px_rgba(212,175,55,0.15)]">
-                <div className="absolute top-0 left-0 w-full h-1.5 gold-gradient" />
-                <div className="flex flex-col items-center text-center mb-8">
-                  <div className="w-16 h-16 rounded-3xl gold-gradient flex items-center justify-center text-premium-dark mb-4 shadow-xl">
-                    <Coins size={32} strokeWidth={2.5} />
-                  </div>
-                  <h3 className="text-2xl font-black tracking-tighter">MINT TOKENS</h3>
-                  <p className="text-[10px] text-white/40 uppercase font-black tracking-widest mt-1">Convert digital fiat</p>
-                </div>
-                
-                <div className="space-y-6">
+              <div className="w-12 h-1.5 bg-primary-100 rounded-full mx-auto mb-8" />
+              
+              <div className="text-center mb-10 space-y-2">
+                <h3 className="text-2xl font-black tracking-tight text-primary-900">Load Offline Reserve</h3>
+                <p className="text-[10px] text-primary-900/40 uppercase font-black tracking-[0.2em]">Bank Authorized Token Minting</p>
+              </div>
+              
+              <div className="space-y-8">
+                <div className="space-y-4">
                   <div className="relative">
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-gold-500 text-xl font-black">₹</span>
+                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-primary-500 text-2xl font-black">₹</span>
                     <input
                       autoFocus
                       type="number"
                       value={amount}
-                      onChange={(e) => setAmount(e.target.value)}
-                      placeholder="000"
-                      className="w-full bg-white/5 border-2 border-white/5 rounded-[2rem] py-6 px-12 text-4xl font-black text-center focus:outline-none focus:border-gold-500 focus:bg-gold-500/5 transition-all font-display italic"
+                      onChange={(e) => { setAmount(e.target.value); setError(''); }}
+                      placeholder="0.00"
+                      className="w-full bg-primary-50 border border-primary-100 rounded-[2rem] py-8 px-12 text-5xl font-black text-center focus:outline-none focus:border-primary-500 transition-all text-primary-900"
                     />
                   </div>
-                  <motion.button
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
-                    onClick={handleConvert}
-                    className="w-full py-5 gold-gradient rounded-[2rem] text-premium-dark font-black tracking-widest shadow-2xl shadow-gold-500/30 text-lg border-b-4 border-black/20"
-                  >
-                    CONFIRM
-                  </motion.button>
+                  
+                  {error && (
+                    <motion.p 
+                      initial={{ opacity: 0, y: -10 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      className="text-red-500 text-[10px] font-black uppercase text-center tracking-widest"
+                    >
+                      {error}
+                    </motion.p>
+                  )}
+
+                  <div className="flex justify-between px-6 py-4 glass-dark rounded-2xl">
+                    <div className="text-left">
+                      <p className="text-[8px] text-primary-900/30 font-black uppercase">Online Wallet</p>
+                      <p className="text-xs font-black text-primary-900/60">₹{balance.toLocaleString()}.00</p>
+                    </div>
+                    <div className="text-right">
+                      <p className="text-[8px] text-primary-900/30 font-black uppercase">Reserve Capacity</p>
+                      <p className="text-xs font-black text-primary-600">₹{(1000 - offlineBalance).toLocaleString()}.00</p>
+                    </div>
+                  </div>
                 </div>
-              </GlassCard>
+
+                <motion.button
+                  whileHover={{ scale: 1.02 }}
+                  whileTap={{ scale: 0.98 }}
+                  onClick={handleConvert}
+                  className="w-full py-6 blue-gradient rounded-[2rem] text-white font-black tracking-widest shadow-xl shadow-primary-500/30 text-lg uppercase"
+                >
+                  Confirm & Authorize
+                </motion.button>
+              </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
 
       <AnimatePresence>
-        {showQR && (
-          <motion.div 
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            className="fixed inset-0 z-[100] bg-black/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6 text-center"
-          >
-            <div className="relative w-72 h-72 mb-16">
-              <div className="absolute inset-0 border-[6px] border-gold-500/20 rounded-[3rem]" />
-              <div className="absolute inset-[-4px] border-2 border-gold-500/40 rounded-[3.2rem]" />
-              
-              <motion.div 
-                animate={{ top: ['0%', '100%', '0%'] }}
-                transition={{ duration: 1.5, repeat: Infinity, ease: "easeInOut" }}
-                className="absolute left-0 w-full h-1.5 bg-gold-400 shadow-[0_0_30px_rgba(212,175,55,1)] z-10 rounded-full" 
-              />
-              
-              <div className="absolute inset-8 flex items-center justify-center opacity-[0.05] filter blur-[1px]">
-                <QrCode size={180} className="text-gold-500" />
-              </div>
-
-              {/* Corners */}
-              <div className="absolute -top-1 -left-1 w-12 h-12 border-t-8 border-l-8 border-gold-500 rounded-tl-[3rem]" />
-              <div className="absolute -top-1 -right-1 w-12 h-12 border-t-8 border-r-8 border-gold-500 rounded-tr-[3rem]" />
-              <div className="absolute -bottom-1 -left-1 w-12 h-12 border-b-8 border-l-8 border-gold-500 rounded-bl-[3rem]" />
-              <div className="absolute -bottom-1 -right-1 w-12 h-12 border-b-8 border-r-8 border-gold-500 rounded-br-[3rem]" />
-            </div>
-
-            <motion.h2 
-              animate={{ opacity: [0.5, 1, 0.5] }}
-              transition={{ duration: 1, repeat: Infinity }}
-              className="text-3xl font-black tracking-tighter mb-3 italic"
-            >
-              SCANNING...
-            </motion.h2>
-            <p className="text-gold-500/60 text-xs font-black uppercase tracking-[0.3em]">Encrypted Handshake</p>
-          </motion.div>
-        )}
+        {showQR && <ScannerOverlay />}
       </AnimatePresence>
     </div>
   );
 };
 
-const HomeSkeleton = () => (
-  <motion.div 
-    initial={{ opacity: 0 }}
-    animate={{ opacity: 1 }}
-    className="p-6 pt-12 space-y-8"
-  >
-    <div className="flex justify-between">
-      <div className="space-y-2">
-        <div className="w-24 h-3 skeleton rounded-full" />
-        <div className="w-32 h-6 skeleton rounded-xl" />
-      </div>
-      <div className="w-12 h-12 skeleton rounded-2xl" />
-    </div>
-    <div className="w-full h-56 skeleton rounded-[2.5rem]" />
-    <div className="grid grid-cols-3 gap-5">
-      {[1, 2, 3].map(i => <div key={i} className="h-28 skeleton rounded-[2rem]" />)}
-    </div>
-    <div className="space-y-4">
-      <div className="w-40 h-4 skeleton rounded-full" />
-      <div className="flex gap-4">
-        {[1, 2, 3].map(i => <div key={i} className="w-28 h-16 skeleton rounded-2xl flex-shrink-0" />)}
-      </div>
-    </div>
-  </motion.div>
-);
-
-const ActionButton = ({ icon, label, onClick, delay }) => (
+const QuickAction = ({ icon, label, onClick }) => (
   <motion.button
-    initial={{ opacity: 0, scale: 0.8, y: 20 }}
-    animate={{ opacity: 1, scale: 1, y: 0 }}
-    transition={{ delay, type: "spring", stiffness: 200 }}
-    whileHover={{ y: -8, backgroundColor: 'rgba(255,255,255,0.06)', scale: 1.05 }}
-    whileTap={{ scale: 0.95 }}
+    whileHover={{ y: -5 }}
+    whileTap={{ scale: 0.9 }}
     onClick={onClick}
-    className="flex flex-col items-center gap-4 p-6 glass rounded-[2.5rem] group transition-all duration-500 relative overflow-hidden"
+    className="flex flex-col items-center gap-3"
   >
-    <div className="absolute inset-0 bg-gold-500/[0.03] opacity-0 group-hover:opacity-100 transition-opacity" />
-    <div className="text-gold-400 group-hover:text-gold-200 group-hover:scale-110 transition-all duration-500 relative z-10">
+    <div className="w-16 h-16 glass rounded-2xl flex items-center justify-center text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition-all border border-primary-900/5">
       {icon}
     </div>
-    <span className="text-[9px] font-black uppercase tracking-[0.2em] text-white/40 group-hover:text-white relative z-10">{label}</span>
+    <span className="text-[9px] font-black uppercase tracking-widest text-primary-900/30">{label}</span>
   </motion.button>
-);
-
-const TokenChip = ({ amount, index }) => (
-  <motion.div 
-    initial={{ opacity: 0, x: 20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.1 * index + 0.5 }}
-    whileHover={{ scale: 1.05, borderLeftColor: 'rgba(212, 175, 55, 1)' }}
-    className="flex-shrink-0 px-6 py-5 glass rounded-[1.8rem] border-l-4 border-l-gold-500/30 flex flex-col gap-1 min-w-[140px] relative overflow-hidden group btn-premium"
-  >
-    <div className="absolute top-0 right-0 w-8 h-8 bg-gold-500/[0.05] rounded-bl-[1.5rem] flex items-center justify-center">
-      <Coins size={12} className="text-gold-500/40" />
-    </div>
-    <span className="text-[8px] font-black text-white/30 uppercase tracking-[0.1em]">Asset Value</span>
-    <span className="text-2xl font-black text-gold-400 font-display italic tracking-tighter">₹{amount}</span>
-  </motion.div>
 );
 
 const TransactionItem = ({ tx, index }) => (
   <motion.div 
-    initial={{ opacity: 0, x: -20 }}
-    animate={{ opacity: 1, x: 0 }}
-    transition={{ delay: 0.1 * index + 0.6 }}
-    whileHover={{ x: 5, backgroundColor: 'rgba(255,255,255,0.04)' }}
-    className="flex items-center justify-between p-5 glass rounded-[2.2rem] border border-white/[0.03] group transition-all duration-300"
+    initial={{ opacity: 0, y: 10 }}
+    animate={{ opacity: 1, y: 0 }}
+    transition={{ delay: index * 0.05 }}
+    className="flex items-center justify-between p-4 bg-white hover:bg-primary-50/50 rounded-[1.8rem] border border-primary-900/5 transition-all group shadow-sm"
   >
-    <div className="flex items-center gap-5">
-      <div className={`w-14 h-14 rounded-3xl flex items-center justify-center transition-all duration-700 shadow-lg ${
+    <div className="flex items-center gap-4">
+      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
         tx?.status === 'Pending' 
-          ? 'bg-white/5 text-white/10' 
-          : (tx?.receiver?.includes('@') ? 'bg-gold-500/10 text-gold-400 group-hover:bg-gold-500/20' : 'bg-blue-500/10 text-blue-400 group-hover:bg-blue-500/20')
+          ? 'bg-primary-50 text-primary-300' 
+          : 'bg-primary-100 text-primary-600'
       }`}>
-        {tx?.receiver?.includes('@') ? <QrCode size={24} /> : <User size={24} />}
+        {tx?.receiver?.includes('@') ? <QrCode size={20} /> : <User size={20} />}
       </div>
-      <div className="space-y-1">
-        <p className="font-black text-[15px] tracking-tight group-hover:text-gold-400 transition-colors">{tx?.receiver || 'Unknown'}</p>
-        <div className="flex items-center gap-3">
-          <span className="text-[9px] font-black text-white/20 uppercase tracking-widest">{tx?.date} • {tx?.time}</span>
-          <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[8px] font-black uppercase tracking-tighter transition-all duration-700 ${
-            tx?.status === 'Pending' 
-              ? 'bg-white/5 text-white/30 animate-pulse' 
-              : (tx?.type === 'Online' ? 'bg-green-500/10 text-green-500' : 'bg-gold-500/10 text-gold-400')
-          }`}>
-            <div className={`w-1 h-1 rounded-full ${tx?.status === 'Pending' ? 'bg-white/20' : (tx?.type === 'Online' ? 'bg-green-500' : 'bg-gold-500')}`} />
-            {tx?.status === 'Pending' ? 'SYNCING' : (tx?.type || 'Online')}
-          </div>
-        </div>
+      <div className="space-y-0.5">
+        <p className="font-bold text-[14px] tracking-tight text-primary-900 group-hover:text-primary-600 transition-colors">{tx?.receiver || 'Merchant Payment'}</p>
+        <p className="text-[9px] font-bold text-primary-900/20 uppercase tracking-widest">{tx?.date} • {tx?.time}</p>
       </div>
     </div>
-    <div className="text-right">
-      <span className={`text-xl font-black font-display italic tracking-tighter transition-colors duration-700 ${tx?.status === 'Pending' ? 'text-white/10' : 'text-white'}`}>
+    <div className="text-right flex flex-col items-end gap-1">
+      <span className={`text-lg font-black tracking-tighter ${tx?.status === 'Pending' ? 'text-primary-900/20' : 'text-primary-900'}`}>
         -₹{tx?.amount || 0}
       </span>
+      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[7px] font-black uppercase tracking-widest ${
+        tx?.status === 'Pending' ? 'bg-primary-50 text-primary-300' : 'bg-primary-50 text-primary-600'
+      }`}>
+        {tx?.status === 'Pending' ? 'SYNCING' : (tx?.type || 'Online')}
+      </div>
     </div>
   </motion.div>
+);
+
+const ScannerOverlay = () => (
+  <motion.div 
+    initial={{ opacity: 0 }}
+    animate={{ opacity: 1 }}
+    exit={{ opacity: 0 }}
+    className="fixed inset-0 z-[100] bg-primary-900/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6"
+  >
+    <div className="relative w-64 h-64 mb-16">
+      <div className="absolute inset-0 border-2 border-white/10 rounded-[3rem]" />
+      <motion.div 
+        animate={{ top: ['0%', '100%', '0%'] }}
+        transition={{ duration: 2, repeat: Infinity }}
+        className="absolute left-0 w-full h-0.5 bg-primary-400 shadow-[0_0_20px_rgba(96,165,250,1)] z-10" 
+      />
+      <div className="absolute inset-0 flex items-center justify-center opacity-10">
+        <QrCode size={180} className="text-white" />
+      </div>
+      <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary-400 rounded-tl-3xl" />
+      <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary-400 rounded-tr-3xl" />
+      <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-primary-400 rounded-bl-3xl" />
+      <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary-400 rounded-br-3xl" />
+    </div>
+    <h2 className="text-2xl font-black tracking-tight mb-2 text-white italic">Scanning QR Code</h2>
+    <p className="text-primary-400/60 text-[9px] font-black uppercase tracking-[0.3em]">Position QR within frame</p>
+  </motion.div>
+);
+
+const NetworkBadge = ({ state }) => {
+  const configs = {
+    ONLINE: { color: 'text-green-600', bg: 'bg-green-50', icon: <Wifi size={14} />, label: 'Online' },
+    OFFLINE: { color: 'text-red-600', bg: 'bg-red-50', icon: <WifiOff size={14} />, label: 'Offline' },
+    UNSTABLE: { color: 'text-orange-600', bg: 'bg-orange-50', icon: <AlertTriangle size={14} />, label: 'Unstable' },
+    SYNCING: { color: 'text-primary-600', bg: 'bg-primary-50', icon: <RefreshCw size={14} className="animate-spin" />, label: 'Syncing' },
+    RECONNECTED: { color: 'text-blue-600', bg: 'bg-blue-50', icon: <Wifi size={14} />, label: 'Restored' }
+  };
+  const config = configs[state] || configs.ONLINE;
+  return (
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-tight border ${config.bg} ${config.color} border-current/10 shadow-sm transition-all duration-700`}>
+      {config.icon}
+      {config.label}
+    </div>
+  );
+};
+
+const TamperScreen = () => (
+  <div className="fixed inset-0 z-[1000] bg-red-600 flex flex-col items-center justify-center p-10 text-center">
+    <div className="w-24 h-24 bg-white rounded-[2.5rem] flex items-center justify-center text-red-600 mb-8 shadow-2xl">
+      <ShieldAlert size={48} />
+    </div>
+    <h2 className="text-3xl font-black text-white mb-4 tracking-tighter italic">SECURITY_BREACH</h2>
+    <p className="text-white text-xs font-bold uppercase tracking-widest">
+      Tampering detected. Access locked.
+    </p>
+  </div>
+);
+
+const HomeSkeleton = () => (
+  <div className="p-6 pt-12 space-y-8 bg-premium-white">
+    <div className="flex justify-between items-center">
+      <div className="w-32 h-6 skeleton rounded-full" />
+      <div className="w-10 h-10 skeleton rounded-full" />
+    </div>
+    <div className="w-full h-56 skeleton rounded-[2.5rem]" />
+    <div className="grid grid-cols-4 gap-4">
+      {[1, 2, 3, 4].map(i => <div key={i} className="h-20 skeleton rounded-2xl" />)}
+    </div>
+    <div className="w-full h-80 skeleton rounded-[2.5rem]" />
+  </div>
 );
 
 export default HomeScreen;
