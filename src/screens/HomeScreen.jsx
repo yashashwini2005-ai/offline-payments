@@ -2,21 +2,22 @@ import React, { useState, useEffect } from 'react';
 import { 
   Send, Download, ScanLine, Wallet, Wifi, WifiOff, ArrowUpRight, ArrowDownLeft, 
   Coins, Plus, History, QrCode, Search, Bell, User, AlertTriangle, RefreshCw, 
-  ShieldAlert, CreditCard, ChevronRight, Info, ShieldCheck, Lock
+  ShieldAlert, CreditCard, ChevronRight, Info, ShieldCheck, Lock, Landmark, Sparkles, Zap, Bot
 } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const HomeScreen = () => {
-  const { balance, offlineBalance, history, networkState, tamperDetected, navigateTo, requestPreload, user } = useApp();
+  const { 
+    balance, offlineBalance, offlineTokens, history, networkState, 
+    tamperDetected, navigateTo, requestPreload, user 
+  } = useApp();
   const { t } = useLanguage();
   const [showConvert, setShowConvert] = useState(false);
-  const [showQR, setShowQR] = useState(false);
   const [amount, setAmount] = useState('');
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState('');
-  const [selectedAuditTx, setSelectedAuditTx] = useState(null);
 
   useEffect(() => {
     const timer = setTimeout(() => setIsLoading(false), 500);
@@ -26,15 +27,11 @@ const HomeScreen = () => {
   const handleConvert = async () => {
     const val = parseFloat(amount);
     if (!val || val <= 0) {
-      setError(t('enter_valid_amount') || 'Enter valid amount');
-      return;
-    }
-    if (val > balance) {
-      setError(t('insufficient_balance') || 'Insufficient balance');
+      setError('Enter valid amount');
       return;
     }
     if (offlineBalance + val > 1000) {
-      setError(t('limit_exceeded') || 'Limit exceeded');
+      setError('Limit: ₹1,000 max');
       return;
     }
 
@@ -42,14 +39,6 @@ const HomeScreen = () => {
     requestPreload(val);
     setShowConvert(false);
     setAmount('');
-  };
-
-  const simulateQRScan = () => {
-    setShowQR(true);
-    setTimeout(() => {
-      setShowQR(false);
-      navigateTo('payment', { receiver: 'Retail_Merchant_01@upi', amount: 0 });
-    }, 2000);
   };
 
   if (tamperDetected) return <TamperScreen />;
@@ -63,180 +52,137 @@ const HomeScreen = () => {
           className="flex items-center gap-3 cursor-pointer group"
           onClick={() => navigateTo('profile')}
         >
-          <div className="w-10 h-10 rounded-full blue-gradient p-0.5 shadow-md group-hover:scale-110 transition-transform">
+          <div className="w-10 h-10 rounded-full blue-gradient p-0.5 shadow-md group-hover:scale-110 transition-transform text-primary-600">
             <div className="w-full h-full rounded-full bg-white flex items-center justify-center overflow-hidden">
               <img src={user.avatar} alt="User" className="w-full h-full object-cover" />
             </div>
           </div>
           <div>
-            <p className="text-primary-900/40 text-[10px] font-bold uppercase tracking-widest">{t('account_holder')}</p>
+            <p className="text-primary-900/40 text-[10px] font-black uppercase tracking-widest">{t('account_holder')}</p>
             <h1 className="text-xl font-black tracking-tight text-primary-900 group-hover:text-primary-600 transition-colors">{user.name}</h1>
           </div>
         </div>
         
         <div className="flex items-center gap-3">
-          <motion.div whileTap={{ scale: 0.9 }} className="p-2.5 glass rounded-xl relative">
-            <Bell size={20} className="text-primary-600" />
-            <div className="absolute top-2 right-2 w-2 h-2 bg-primary-500 rounded-full border-2 border-white" />
-          </motion.div>
           <NetworkBadge state={networkState} t={t} />
         </div>
       </div>
 
-      {/* Wallet Card */}
+      {/* Top Grid Actions */}
+      <div className="grid grid-cols-2 gap-4">
+        <TopAction 
+          icon={<Send size={24} />} 
+          label={t('send')} 
+          onClick={() => navigateTo('payment')} 
+          color="bg-blue-50 text-blue-600"
+        />
+        <TopAction 
+          icon={<Landmark size={24} />} 
+          label="To Bank" 
+          onClick={() => navigateTo('bankTransfer')} 
+          color="bg-purple-50 text-purple-600"
+        />
+        <TopAction 
+          icon={<Zap size={24} />} 
+          label="Check Offline" 
+          onClick={() => navigateTo('pin', { isBalanceCheck: true, balanceType: 'offline' })} 
+          color="bg-orange-50 text-orange-600"
+        />
+        <TopAction 
+          icon={<Wallet size={24} />} 
+          label="Online Balance" 
+          onClick={() => navigateTo('pin', { isBalanceCheck: true, balanceType: 'online' })} 
+          color="bg-green-50 text-green-600"
+        />
+      </div>
+
       <motion.div
-        initial={{ opacity: 0, scale: 0.95 }}
-        animate={{ opacity: 1, scale: 1 }}
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="bg-white border border-primary-100 rounded-[2.5rem] p-8 shadow-xl shadow-primary-900/5 space-y-6 relative overflow-hidden"
       >
-        <div className="relative group overflow-hidden rounded-[2.5rem] blue-gradient p-8 shadow-2xl shadow-primary-500/20">
-          <div className="absolute top-0 right-0 p-4 opacity-10">
-            <CreditCard size={140} />
+        <div className="flex justify-between items-start">
+          <div className="space-y-1">
+            <div className="flex items-center gap-2 mb-2">
+              <div className="flex items-center gap-1.5 bg-orange-50 px-2 py-1 rounded-full border border-orange-100">
+                <Zap size={10} className="text-orange-500 fill-orange-500" />
+                <span className="text-[8px] font-black text-orange-600 uppercase tracking-widest">Reserve Capacity</span>
+              </div>
+              <div className="flex items-center gap-1">
+                <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
+                <span className="text-[7px] font-black text-primary-900/30 uppercase tracking-widest">Live Secure Sync</span>
+              </div>
+            </div>
+            <div className="flex items-baseline gap-2">
+              <h2 className="text-4xl font-black text-primary-900 italic">₹{offlineBalance.toLocaleString()}</h2>
+              <span className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest">Offline Balance</span>
+            </div>
+            <p className="text-[10px] font-black text-primary-900/20 uppercase tracking-widest">{offlineTokens.length} Secure Tokens Loaded</p>
           </div>
-          
-          <div className="space-y-6 relative z-10">
-            <div className="flex justify-between items-center">
-              <div className="space-y-1">
-                <span className="text-[10px] font-bold text-white/60 uppercase tracking-[0.2em]">{t('online_wallet')}</span>
-                <div className="flex items-baseline gap-1.5">
-                  <span className="text-white/80 text-2xl font-black">₹</span>
-                  <h2 className="text-4xl font-black tracking-tighter text-white">{balance.toLocaleString()}</h2>
-                </div>
-              </div>
-              <div className="w-14 h-14 bg-white/20 backdrop-blur-md rounded-2xl flex items-center justify-center text-white border border-white/30">
-                <Wallet size={28} />
-              </div>
-            </div>
+          <motion.button
+            whileTap={{ scale: 0.95 }}
+            onClick={() => setShowConvert(true)}
+            className="px-5 py-3 blue-gradient rounded-2xl flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary-500/20"
+          >
+            <Plus size={14} strokeWidth={4} />
+            Load Tokens
+          </motion.button>
+        </div>
 
-            <div className="h-px bg-white/20" />
-
-            <div className="flex justify-between items-end">
-              <div className="space-y-1">
-                <div className="flex items-center gap-2">
-                  <span className="text-[10px] font-bold text-white/70 uppercase tracking-[0.2em]">{t('offline_reserve')}</span>
-                  <div className={`w-2 h-2 rounded-full ${offlineBalance >= 1000 ? 'bg-orange-400' : 'bg-white'} animate-pulse`} />
-                </div>
-                <div className="flex items-baseline gap-1">
-                  <span className="text-white/80 text-lg font-bold">₹</span>
-                  <p className="text-2xl font-black text-white italic">{offlineBalance}</p>
-                  <span className="text-[10px] text-white/40 font-bold ml-1">/ 1,000</span>
-                </div>
-              </div>
-              
-              <motion.button
-                whileHover={{ scale: 1.05 }}
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setShowConvert(true)}
-                className="px-6 py-3 bg-white text-primary-700 rounded-2xl text-[10px] uppercase font-black shadow-lg shadow-black/5 flex items-center gap-2"
-              >
-                <Plus size={14} strokeWidth={4} />
-                {t('load_reserve')}
-              </motion.button>
-            </div>
+        <div className="space-y-3 pt-2">
+          <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-primary-900/40">
+            <span>Utilization: {Math.round((offlineBalance / 1000) * 100)}%</span>
+            <span>Limit: ₹1,000</span>
+          </div>
+          <div className="h-2 w-full bg-primary-50 rounded-full overflow-hidden">
+            <motion.div 
+              initial={{ width: 0 }}
+              animate={{ width: `${(offlineBalance / 1000) * 100}%` }}
+              className="h-full bg-orange-500"
+            />
           </div>
         </div>
       </motion.div>
 
-      {/* Grid Quick Actions */}
-      <div className="grid grid-cols-4 gap-4">
-        <QuickAction icon={<Send size={22} />} label={t('send')} onClick={() => navigateTo('payment')} />
-        <QuickAction icon={<Download size={22} />} label={t('request')} />
-        <QuickAction icon={<ScanLine size={22} />} label={t('scan')} onClick={simulateQRScan} />
-        <QuickAction icon={<History size={22} />} label={t('history')} />
-      </div>
-
-      {/* Transaction History Section */}
-      <div className="space-y-5 pt-2">
+      {/* Quick Pay Merchants (From Photo) */}
+      <div className="space-y-6">
         <div className="flex justify-between items-center px-1">
-          <h3 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40">{t('transaction_history')}</h3>
-          <motion.button 
-            whileHover={{ x: 2 }}
-            className="text-[10px] font-black uppercase text-primary-600 flex items-center gap-1 group"
-          >
-            {t('see_all')} <ChevronRight size={14} className="group-hover:translate-x-1 transition-transform" />
-          </motion.button>
+          <h3 className="text-sm font-black text-primary-900">Quick Pay Merchants</h3>
+          <button className="text-[10px] font-black uppercase text-primary-600 tracking-widest">See All</button>
         </div>
         
-        <div className="space-y-3">
-          {history.length === 0 ? (
-            <div className="text-center py-12 glass rounded-[2.5rem] border-dashed border-primary-900/10">
-              <p className="text-primary-900/20 text-[10px] font-black uppercase tracking-widest">{t('no_activity')}</p>
-            </div>
-          ) : (
-            history.slice().reverse().map((tx, i) => (
-              <TransactionItem 
-                key={tx.id} 
-                index={i} 
-                tx={tx} 
-                t={t}
-                onShowAudit={() => setSelectedAuditTx(tx)}
-              />
-            ))
-          )}
+        <div className="grid grid-cols-4 gap-4">
+          <MerchantIcon icon="☕" name="Cafe Coffee" onClick={() => navigateTo('payment', { receiver: 'Cafe Coffee', vpa: 'cafe@upi' })} />
+          <MerchantIcon icon="💊" name="Pharma Plus" onClick={() => navigateTo('payment', { receiver: 'Pharma Plus', vpa: 'pharma@upi' })} />
+          <MerchantIcon icon="🛒" name="Big Bazaar" onClick={() => navigateTo('payment', { receiver: 'Big Bazaar', vpa: 'bigbazaar@upi' })} />
+          <MerchantIcon icon="⛽" name="Shell" onClick={() => navigateTo('payment', { receiver: 'Shell', vpa: 'shell@upi' })} />
         </div>
       </div>
 
-      {/* Token Audit Trail Modal */}
-      <AnimatePresence>
-        {selectedAuditTx && (
-          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
-            <motion.div 
-              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-              onClick={() => setSelectedAuditTx(null)}
-              className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" 
-            />
-            <motion.div
-              initial={{ scale: 0.9, opacity: 0 }}
-              animate={{ scale: 1, opacity: 1 }}
-              exit={{ scale: 0.9, opacity: 0 }}
-              className="relative w-full max-w-sm bg-white rounded-[3rem] p-8 shadow-2xl border border-primary-100"
-            >
-              <div className="flex items-center gap-3 mb-6">
-                <div className="w-10 h-10 bg-primary-50 rounded-xl flex items-center justify-center text-primary-600">
-                  <ShieldCheck size={24} />
-                </div>
-                <div className="text-left">
-                  <h3 className="text-lg font-black text-primary-900">Token Audit Trail</h3>
-                  <p className="text-[8px] text-primary-900/40 font-black uppercase tracking-widest">Cryptographically Signed Proof</p>
-                </div>
-              </div>
-
-              <div className="space-y-4 bg-primary-50/50 p-6 rounded-[2rem] border border-primary-100 font-mono text-[10px]">
-                <div className="space-y-1">
-                  <p className="text-primary-900/30 font-black uppercase tracking-widest text-[8px]">Transaction ID</p>
-                  <p className="text-primary-900 break-all">{selectedAuditTx.id}</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-primary-900/30 font-black uppercase tracking-widest text-[8px]">Digital Signature</p>
-                  <p className="text-blue-600 break-all font-black">HMAC-SHA256: {crypto.randomUUID().replace(/-/g, '')}...</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-primary-900/30 font-black uppercase tracking-widest text-[8px]">Issuing Authority</p>
-                  <p className="text-primary-900 font-black">RESERVE_BANK_SIM_AUTH_V1</p>
-                </div>
-                <div className="space-y-1">
-                  <p className="text-primary-900/30 font-black uppercase tracking-widest text-[8px]">Status</p>
-                  <p className={selectedAuditTx.status === 'Pending' ? 'text-orange-500 font-black animate-pulse' : 'text-green-600 font-black'}>
-                    {selectedAuditTx.status === 'Pending' ? t('pending') : t('completed')}
-                  </p>
-                </div>
-              </div>
-
-              <motion.button 
-                whileTap={{ scale: 0.95 }}
-                onClick={() => setSelectedAuditTx(null)}
-                className="w-full mt-8 py-4 blue-gradient rounded-2xl font-black text-[10px] uppercase tracking-widest"
-              >
-                {t('back')}
-              </motion.button>
-            </motion.div>
+      <motion.button
+        whileTap={{ scale: 0.98 }}
+        onClick={() => navigateTo('audit')}
+        className="w-full py-5 glass border border-primary-100 rounded-3xl flex items-center justify-between px-6 group"
+      >
+        <div className="flex items-center gap-4">
+          <div className="w-12 h-12 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 shadow-sm shadow-blue-500/10">
+            <Bot size={24} />
           </div>
-        )}
-      </AnimatePresence>
+          <div className="text-left">
+            <div className="flex items-center gap-2">
+              <p className="text-[10px] font-black text-primary-900 uppercase tracking-widest">Token Audit Trail</p>
+              <span className="text-[7px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">(Offline Only)</span>
+            </div>
+            <p className="text-[8px] text-primary-900/30 font-bold uppercase tracking-widest">Verify Offline Signatures</p>
+          </div>
+        </div>
+        <ChevronRight size={18} className="text-primary-200 group-hover:translate-x-1 transition-transform" />
+      </motion.button>
 
       {/* Conversion Modal */}
       <AnimatePresence>
         {showConvert && (
-          <div className="fixed inset-0 z-50 flex items-end justify-center">
+          <div className="fixed inset-0 z-[100] flex items-end justify-center">
             <motion.div
               initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
               onClick={() => { setShowConvert(false); setError(''); }}
@@ -244,126 +190,62 @@ const HomeScreen = () => {
             />
             <motion.div
               initial={{ y: "100%" }} animate={{ y: 0 }} exit={{ y: "100%" }}
-              transition={{ type: "spring", damping: 25, stiffness: 200 }}
               className="relative w-full max-w-md bg-white rounded-t-[3rem] p-10 pb-16 shadow-2xl"
             >
               <div className="w-12 h-1.5 bg-primary-100 rounded-full mx-auto mb-8" />
               <div className="text-center mb-10 space-y-2">
-                <h3 className="text-2xl font-black tracking-tight text-primary-900">{t('load_offline_reserve')}</h3>
-                <p className="text-[10px] text-primary-900/40 uppercase font-black tracking-[0.2em]">{t('bank_auth_minting')}</p>
+                <h3 className="text-2xl font-black text-primary-900">Authorize Reserve</h3>
+                <p className="text-[10px] text-primary-900/40 uppercase font-black tracking-widest">Bank Signed Token Minting</p>
               </div>
               <div className="space-y-8">
-                <div className="space-y-4">
-                  <div className="relative">
-                    <span className="absolute left-6 top-1/2 -translate-y-1/2 text-primary-500 text-2xl font-black">₹</span>
-                    <input
-                      autoFocus type="number" value={amount}
-                      onChange={(e) => { setAmount(e.target.value); setError(''); }}
-                      placeholder="0.00"
-                      className="w-full bg-primary-50 border border-primary-100 rounded-[2rem] py-8 px-12 text-5xl font-black text-center focus:outline-none focus:border-primary-500 transition-all text-primary-900"
-                    />
-                  </div>
-                  {error && <p className="text-red-500 text-[10px] font-black uppercase text-center tracking-widest">{error}</p>}
-                  <div className="flex justify-between px-6 py-4 glass-dark rounded-2xl">
-                    <div className="text-left">
-                      <p className="text-[8px] text-primary-900/30 font-black uppercase">{t('online_wallet')}</p>
-                      <p className="text-xs font-black text-primary-900/60">₹{balance.toLocaleString()}.00</p>
-                    </div>
-                    <div className="text-right">
-                      <p className="text-[8px] text-primary-900/30 font-black uppercase">{t('reserve_capacity')}</p>
-                      <p className="text-xs font-black text-primary-600">₹{(1000 - offlineBalance).toLocaleString()}.00</p>
-                    </div>
-                  </div>
+                <div className="relative">
+                  <span className="absolute left-6 top-1/2 -translate-y-1/2 text-primary-500 text-2xl font-black">₹</span>
+                  <input
+                    autoFocus type="number" value={amount}
+                    onChange={(e) => { setAmount(e.target.value); setError(''); }}
+                    placeholder="0.00"
+                    className="w-full bg-primary-50 border border-primary-100 rounded-[2rem] py-8 px-12 text-5xl font-black text-center focus:outline-none focus:border-primary-500 text-primary-900"
+                  />
                 </div>
+                {error && <p className="text-red-500 text-[10px] font-black uppercase text-center tracking-widest">{error}</p>}
                 <motion.button
-                  whileHover={{ scale: 1.02 }} whileTap={{ scale: 0.98 }}
+                  whileTap={{ scale: 0.98 }}
                   onClick={handleConvert}
-                  className="w-full py-6 blue-gradient rounded-[2rem] text-white font-black tracking-widest shadow-xl shadow-primary-500/20 text-lg uppercase"
+                  className="w-full py-6 blue-gradient rounded-[2rem] text-white font-black tracking-widest shadow-xl text-lg uppercase"
                 >
-                  {t('confirm_authorize')}
+                  Confirm & Authorize
                 </motion.button>
               </div>
             </motion.div>
           </div>
         )}
       </AnimatePresence>
-
-      <AnimatePresence>
-        {showQR && <ScannerOverlay t={t} />}
-      </AnimatePresence>
     </div>
   );
 };
 
-const QuickAction = ({ icon, label, onClick }) => (
+const TopAction = ({ icon, label, onClick, color }) => (
   <motion.button
-    whileHover={{ y: -5 }} whileTap={{ scale: 0.9 }} onClick={onClick}
-    className="flex flex-col items-center gap-3"
+    whileTap={{ scale: 0.95 }}
+    onClick={onClick}
+    className={`p-6 rounded-[2.5rem] flex flex-col items-center gap-3 border border-transparent hover:border-primary-100 transition-all ${color}`}
   >
-    <div className="w-16 h-16 glass rounded-2xl flex items-center justify-center text-primary-600 hover:bg-primary-50 hover:border-primary-200 transition-all border border-primary-900/5">
-      {icon}
-    </div>
-    <span className="text-[9px] font-black uppercase tracking-widest text-primary-900/30">{label}</span>
+    <div className="shrink-0">{icon}</div>
+    <span className="text-[10px] font-black uppercase tracking-widest">{label}</span>
   </motion.button>
 );
 
-const TransactionItem = ({ tx, index, onShowAudit, t }) => (
-  <motion.div 
-    initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }}
-    transition={{ delay: index * 0.05 }}
-    className="flex items-center justify-between p-4 bg-white hover:bg-primary-50/50 rounded-[1.8rem] border border-primary-900/5 transition-all group shadow-sm"
+const MerchantIcon = ({ icon, name, onClick }) => (
+  <motion.button
+    whileTap={{ scale: 0.9 }}
+    onClick={onClick}
+    className="flex flex-col items-center gap-3"
   >
-    <div className="flex items-center gap-4">
-      <div className={`w-12 h-12 rounded-2xl flex items-center justify-center transition-all ${
-        tx?.status === 'Pending' ? 'bg-orange-50 text-orange-400' : 'bg-primary-100 text-primary-600'
-      }`}>
-        {tx?.receiver?.includes('@') ? <QrCode size={20} /> : <User size={20} />}
-      </div>
-      <div className="space-y-0.5">
-        <p className="font-bold text-[14px] tracking-tight text-primary-900 group-hover:text-primary-600 transition-colors">{tx?.receiver || 'Merchant Payment'}</p>
-        <div className="flex items-center gap-2">
-          <p className="text-[9px] font-bold text-primary-900/20 uppercase tracking-widest">{tx?.date} • {tx?.time}</p>
-          {tx?.status === 'Pending' && (
-            <button onClick={onShowAudit} className="flex items-center gap-1 px-1.5 py-0.5 bg-primary-100 text-primary-600 rounded text-[7px] font-black uppercase hover:bg-primary-200">
-              <ShieldCheck size={10} /> {t('history')}
-            </button>
-          )}
-        </div>
-      </div>
+    <div className="w-16 h-16 bg-white border border-primary-50 rounded-2xl flex items-center justify-center text-2xl shadow-sm">
+      {icon}
     </div>
-    <div className="text-right flex flex-col items-end gap-1">
-      <span className={`text-lg font-black tracking-tighter ${tx?.status === 'Pending' ? 'text-orange-500' : 'text-primary-900'}`}>
-        -₹{tx?.amount || 0}
-      </span>
-      <div className={`flex items-center gap-1 px-2 py-0.5 rounded-lg text-[7px] font-black uppercase tracking-widest ${
-        tx?.status === 'Pending' ? 'bg-orange-50 text-orange-400 animate-pulse' : 'bg-green-50 text-green-600'
-      }`}>
-        {tx?.status === 'Pending' ? t('pending') : t('completed')}
-      </div>
-    </div>
-  </motion.div>
-);
-
-const ScannerOverlay = ({ t }) => (
-  <motion.div 
-    initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
-    className="fixed inset-0 z-[100] bg-primary-900/95 backdrop-blur-2xl flex flex-col items-center justify-center p-6"
-  >
-    <div className="relative w-64 h-64 mb-16">
-      <div className="absolute inset-0 border-2 border-white/10 rounded-[3rem]" />
-      <motion.div 
-        animate={{ top: ['0%', '100%', '0%'] }} transition={{ duration: 2, repeat: Infinity }}
-        className="absolute left-0 w-full h-0.5 bg-primary-400 shadow-[0_0_20px_rgba(96,165,250,1)] z-10" 
-      />
-      <div className="absolute inset-0 flex items-center justify-center opacity-10"><QrCode size={180} className="text-white" /></div>
-      <div className="absolute -top-1 -left-1 w-8 h-8 border-t-4 border-l-4 border-primary-400 rounded-tl-3xl" />
-      <div className="absolute -top-1 -right-1 w-8 h-8 border-t-4 border-r-4 border-primary-400 rounded-tr-3xl" />
-      <div className="absolute -bottom-1 -left-1 w-8 h-8 border-b-4 border-l-4 border-primary-400 rounded-bl-3xl" />
-      <div className="absolute -bottom-1 -right-1 w-8 h-8 border-b-4 border-r-4 border-primary-400 rounded-br-3xl" />
-    </div>
-    <h2 className="text-2xl font-black tracking-tight mb-2 text-white italic">{t('scan')}</h2>
-    <p className="text-primary-400/60 text-[9px] font-black uppercase tracking-[0.3em]">Position QR within frame</p>
-  </motion.div>
+    <span className="text-[8px] font-black uppercase text-primary-900/40 text-center tracking-tighter leading-tight">{name}</span>
+  </motion.button>
 );
 
 const NetworkBadge = ({ state, t }) => {
@@ -376,7 +258,7 @@ const NetworkBadge = ({ state, t }) => {
   };
   const config = configs[state] || configs.ONLINE;
   return (
-    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-tight border ${config.bg} ${config.color} border-current/10 shadow-sm transition-all duration-700`}>
+    <div className={`flex items-center gap-2 px-3 py-1.5 rounded-xl text-[9px] font-black uppercase tracking-tight border ${config.bg} ${config.color} border-current/10 shadow-sm`}>
       {config.icon} {config.label}
     </div>
   );
@@ -393,9 +275,8 @@ const TamperScreen = () => (
 const HomeSkeleton = () => (
   <div className="p-6 pt-12 space-y-8 bg-premium-white">
     <div className="flex justify-between items-center"><div className="w-32 h-6 skeleton rounded-full" /><div className="w-10 h-10 skeleton rounded-full" /></div>
+    <div className="grid grid-cols-2 gap-4">{[1, 2, 3, 4].map(i => <div key={i} className="h-32 skeleton rounded-[2.5rem]" />)}</div>
     <div className="w-full h-56 skeleton rounded-[2.5rem]" />
-    <div className="grid grid-cols-4 gap-4">{[1, 2, 3, 4].map(i => <div key={i} className="h-20 skeleton rounded-2xl" />)}</div>
-    <div className="w-full h-80 skeleton rounded-[2.5rem]" />
   </div>
 );
 

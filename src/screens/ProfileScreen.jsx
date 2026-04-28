@@ -4,17 +4,19 @@ import {
   User, Camera, ChevronLeft, ChevronRight, CreditCard, 
   ShieldCheck, Bell, Globe, Headphones, LogOut, Plus, 
   QrCode, Landmark, CheckCircle2, MoreVertical, Trash2, 
-  Smartphone, Share2, Download, AlertCircle, Sparkles
+  Smartphone, Share2, Download, AlertCircle, Sparkles, Lock
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const ProfileScreen = () => {
-  const { user, linkedBanks, navigateTo, switchPrimaryBank, setLinkedBanks, setUser } = useApp();
+  const { user, linkedBanks, navigateTo, switchPrimaryBank, setLinkedBanks, setUser, offlineTokens } = useApp();
   const { language, setLanguage, t } = useLanguage();
   const [showQR, setShowQR] = useState(false);
   const [showAddBank, setShowAddBank] = useState(false);
   const [showLang, setShowLang] = useState(false);
+  const [showChangePin, setShowChangePin] = useState(false);
+  const [newPin, setNewPin] = useState('');
   const [activeTab, setActiveTab] = useState('banks'); // banks, settings
 
   const languages = [
@@ -93,6 +95,17 @@ const ProfileScreen = () => {
                   animate={{ width: `${user.completion}%` }}
                   className="h-full blue-gradient"
                 />
+              </div>
+            </div>
+
+            {/* Offline Tokens Count */}
+            <div className="w-full max-w-xs p-5 bg-orange-50 rounded-3xl border border-orange-100 flex items-center gap-4">
+              <div className="w-10 h-10 bg-white rounded-xl flex items-center justify-center text-orange-600 shadow-sm">
+                <ShieldCheck size={20} />
+              </div>
+              <div className="text-left">
+                <p className="text-[10px] font-black text-orange-600/40 uppercase tracking-widest">Tokens Loaded</p>
+                <p className="text-sm font-black text-orange-900">{offlineTokens.length} Active Tokens</p>
               </div>
             </div>
           </div>
@@ -181,6 +194,12 @@ const ProfileScreen = () => {
                     sub={languages.find(l => l.code === language)?.native || 'English'} 
                   />
                   <SettingsItem icon={<Smartphone size={20} />} label={t('linked_devices')} sub="Samsung S23 Ultra" />
+                  <SettingsItem 
+                    onClick={() => setShowChangePin(true)}
+                    icon={<Lock size={20} />} 
+                    label="Change UPI PIN" 
+                    sub="Secure your transactions" 
+                  />
                 </div>
 
                 <h4 className="text-xs font-black uppercase tracking-[0.15em] text-primary-900/40 pt-4">Support & About</h4>
@@ -325,6 +344,52 @@ const ProfileScreen = () => {
                     Search More Banks
                   </motion.button>
                 </div>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      {/* Change PIN Modal */}
+      <AnimatePresence>
+        {showChangePin && (
+          <div className="fixed inset-0 z-[120] flex items-end justify-center">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              onClick={() => { setShowChangePin(false); setNewPin(''); }}
+              className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" 
+            />
+            <motion.div
+              initial={{ y: '100%' }} animate={{ y: 0 }} exit={{ y: '100%' }}
+              className="relative w-full max-w-md bg-white rounded-t-[3rem] p-10 pb-16 shadow-2xl"
+            >
+              <div className="w-12 h-1.5 bg-primary-100 rounded-full mx-auto mb-8" />
+              <div className="text-center mb-8">
+                <div className="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600 mx-auto mb-4">
+                  <Lock size={32} />
+                </div>
+                <h3 className="text-2xl font-black text-primary-900">Change UPI PIN</h3>
+                <p className="text-[10px] text-primary-900/40 uppercase font-black tracking-widest">Update your secure authorization code</p>
+              </div>
+
+              <div className="space-y-6">
+                <div className="space-y-2 text-left">
+                  <label className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest ml-2">New 4-Digit PIN</label>
+                  <input
+                    type="password"
+                    maxLength={4}
+                    value={newPin}
+                    onChange={(e) => setNewPin(e.target.value)}
+                    placeholder="••••"
+                    className="w-full bg-primary-50 border border-primary-100 rounded-[2rem] py-5 px-8 text-3xl font-black text-center tracking-[1em] text-primary-900 focus:outline-none focus:border-primary-500"
+                  />
+                </div>
+                <motion.button 
+                  whileTap={{ scale: 0.98 }}
+                  onClick={() => { setShowChangePin(false); setNewPin(''); }}
+                  className="w-full py-5 blue-gradient rounded-[2rem] font-black text-white uppercase tracking-widest shadow-lg"
+                >
+                  Update PIN
+                </motion.button>
               </div>
             </motion.div>
           </div>

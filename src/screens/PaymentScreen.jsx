@@ -15,7 +15,7 @@ const PaymentScreen = () => {
       setError('Invalid UPI ID or Mobile Number');
       return;
     }
-    if (!val || val <= 0) {
+    if (isNaN(val) || val <= 0) {
       setError('Enter a valid amount');
       return;
     }

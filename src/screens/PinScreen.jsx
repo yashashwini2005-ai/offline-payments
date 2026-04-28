@@ -1,28 +1,48 @@
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Lock, ShieldCheck, ChevronLeft, Delete, Fingerprint } from 'lucide-react';
+import { Lock, ShieldCheck, ChevronLeft, Delete, Fingerprint, Zap } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useLanguage } from '../context/LanguageContext';
 
 const PinScreen = () => {
-  const { confirmTransaction, navigateTo, pendingTransaction } = useApp();
+  const { balance, offlineBalance, confirmTransaction, navigateTo, pendingTransaction, isOnline } = useApp();
   const { t } = useLanguage();
   const [pin, setPin] = useState('');
   const [error, setError] = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [showBalance, setShowBalance] = useState(false);
+  const [isProcessing, setIsProcessing] = useState(false);
 
-  const handleKeyPress = (num) => {
-    if (pin.length < 4) {
+  const handleKeyPress = async (num) => {
+    if (pin.length < 4 && !isProcessing) {
       const newPin = pin + num;
       setPin(newPin);
       if (newPin.length === 4) {
         if (newPin === '1234') {
-          confirmTransaction();
+          if (pendingTransaction?.type === 'BANK_TRANSFER' && !isOnline) {
+            setErrorMsg('Bank transfers require internet connection');
+            setPin('');
+            return;
+          }
+          if (pendingTransaction?.isBalanceCheck) {
+            setShowBalance(true);
+          } else {
+            setIsProcessing(true);
+            setErrorMsg('');
+            // Simulate processing for 2 seconds
+            setTimeout(() => {
+              confirmTransaction();
+              setIsProcessing(false);
+            }, 2000);
+          }
         } else {
           setError(true);
+          setErrorMsg('Invalid UPI PIN');
           setTimeout(() => {
             setPin('');
             setError(false);
-          }, 800);
+            setErrorMsg('');
+          }, 1500);
         }
       }
     }
@@ -55,9 +75,18 @@ const PinScreen = () => {
         </motion.div>
 
         <h2 className="text-3xl font-black tracking-tight text-primary-900 mb-2">{t('enter_upi_pin')}</h2>
-        <p className="text-primary-900/40 text-[10px] font-black uppercase tracking-[0.2em] mb-12 flex items-center gap-2">
+        <p className="text-primary-900/40 text-[10px] font-black uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
           <ShieldCheck size={14} /> {t('secure_auth')}
         </p>
+
+        {errorMsg && (
+          <motion.p 
+            initial={{ opacity: 0, y: -10 }} animate={{ opacity: 1, y: 0 }}
+            className="text-red-500 text-[10px] font-black uppercase tracking-widest mb-6 bg-red-50 px-4 py-2 rounded-full"
+          >
+            {errorMsg}
+          </motion.p>
+        )}
 
         {/* PIN Dots */}
         <div className={`flex gap-6 mb-12 ${error ? 'animate-shake' : ''}`}>
@@ -92,6 +121,73 @@ const PinScreen = () => {
           {t('forgot_pin')}
         </button>
       </div>
+
+      <AnimatePresence>
+        {showBalance && (
+          <div className="fixed inset-0 z-[100] flex items-center justify-center p-6">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-primary-900/60 backdrop-blur-md" 
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }}
+              animate={{ scale: 1, opacity: 1 }}
+              className="relative w-full max-w-sm bg-white rounded-[3rem] p-8 shadow-2xl border border-primary-100 flex flex-col items-center"
+            >
+              <div className="w-16 h-16 bg-green-50 rounded-2xl flex items-center justify-center text-green-600 mb-6">
+                <ShieldCheck size={32} />
+              </div>
+              <h3 className="text-xl font-black text-primary-900 mb-2">{t('user_profile')}</h3>
+              <p className="text-[10px] font-black text-primary-900/40 uppercase tracking-widest mb-8">Authorized Balance View</p>
+              
+              <div className="w-full space-y-4">
+                {(!pendingTransaction?.balanceType || pendingTransaction.balanceType === 'online') && (
+                  <div className="p-5 glass rounded-2xl border border-primary-100 flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-primary-900/30 uppercase tracking-widest">{t('online_wallet')}</span>
+                    <span className="text-lg font-black text-primary-900">₹{balance.toLocaleString()}</span>
+                  </div>
+                )}
+                {(!pendingTransaction?.balanceType || pendingTransaction.balanceType === 'offline') && (
+                  <div className="p-5 glass rounded-2xl border border-primary-100 flex justify-between items-center">
+                    <span className="text-[10px] font-bold text-primary-900/30 uppercase tracking-widest">{t('offline_reserve')}</span>
+                    <span className="text-lg font-black text-primary-900">₹{offlineBalance}</span>
+                  </div>
+                )}
+              </div>
+
+              <motion.button 
+                whileTap={{ scale: 0.95 }}
+                onClick={() => navigateTo('home')}
+                className="w-full mt-8 py-4 blue-gradient rounded-2xl font-black text-[10px] uppercase tracking-widest"
+              >
+                {t('back_to_home')}
+              </motion.button>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
+      <AnimatePresence>
+        {isProcessing && (
+          <div className="fixed inset-0 z-[200] flex items-center justify-center">
+            <motion.div 
+              initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}
+              className="absolute inset-0 bg-primary-900/40 backdrop-blur-md" 
+            />
+            <motion.div
+              initial={{ scale: 0.9, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
+              className="relative bg-white p-10 rounded-[3rem] shadow-2xl flex flex-col items-center gap-6"
+            >
+              <div className="w-20 h-20 bg-blue-50 rounded-2xl flex items-center justify-center text-blue-600">
+                <Zap size={40} className="animate-pulse" />
+              </div>
+              <div className="text-center">
+                <h3 className="text-xl font-black text-primary-900">Processing Payment</h3>
+                <p className="text-[10px] text-primary-900/40 font-black uppercase tracking-widest mt-1">Establishing Secure Connection</p>
+              </div>
+            </motion.div>
+          </div>
+        )}
+      </AnimatePresence>
     </div>
   );
 };

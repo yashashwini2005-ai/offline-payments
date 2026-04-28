@@ -13,6 +13,7 @@ export const AppProvider = ({ children }) => {
   const [offlineBalance, setOfflineBalance] = useState(0);
   const [offlineTokens, setOfflineTokens] = useState([]);
   const [history, setHistory] = useState([]);
+  const [tokenActivities, setTokenActivities] = useState([]);
   const [currentScreen, setCurrentScreen] = useState('home');
   const [pendingTransaction, setPendingTransaction] = useState(null);
   const [lastTransaction, setLastTransaction] = useState(null);
@@ -123,6 +124,20 @@ export const AppProvider = ({ children }) => {
     const updatedTokens = TokenManager.getTokens();
     setOfflineTokens(updatedTokens);
     setOfflineBalance(updatedTokens.reduce((sum, t) => sum + t.amount, 0));
+    
+    // Log Activity
+    const activity = {
+      id: crypto.randomUUID(),
+      action: 'Created',
+      amount,
+      status: 'Success',
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      mode: 'Online',
+      tokenId: `TK-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+      remarks: 'Reserve Authorized'
+    };
+    setTokenActivities(prev => [activity, ...prev]);
+
     setIsPreloading(false);
     setPreloadAmount(0);
     return true;
@@ -139,6 +154,33 @@ export const AppProvider = ({ children }) => {
       return;
     }
 
+    // Handle Bank Transfer
+    if (pendingTransaction.type === 'BANK_TRANSFER') {
+      const isOffline = networkState === NETWORK_STATE.OFFLINE || networkState === NETWORK_STATE.UNSTABLE;
+      if (isOffline) return; // caught by UI
+
+      const newBalance = balance - pendingTransaction.amount;
+      await BankServer.updateBalance(newBalance);
+      setBalance(newBalance);
+
+      const tx = {
+        ...pendingTransaction,
+        id: crypto.randomUUID(),
+        status: 'Success',
+        mode: 'Online',
+        date: new Date().toLocaleDateString('en-IN', { day: '2-digit', month: 'short' }),
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })
+      };
+
+      await TransactionQueue.addTransaction(tx);
+      const updatedHistory = await TransactionQueue.getLedger();
+      setHistory(updatedHistory);
+      setLastTransaction(tx);
+      setPendingTransaction(null);
+      setCurrentScreen('success');
+      return;
+    }
+
     const isOffline = networkState === NETWORK_STATE.OFFLINE || networkState === NETWORK_STATE.UNSTABLE;
     const status = isOffline ? 'Pending' : 'Success';
     const type = isOffline ? 'Offline' : 'Online';
@@ -152,6 +194,19 @@ export const AppProvider = ({ children }) => {
       const updatedTokens = TokenManager.getTokens();
       setOfflineTokens(updatedTokens);
       setOfflineBalance(updatedTokens.reduce((sum, t) => sum + t.amount, 0));
+
+      // Log Activity for Offline Use
+      const activity = {
+        id: crypto.randomUUID(),
+        action: 'Used',
+        amount: pendingTransaction.amount,
+        status: 'Success',
+        time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        mode: 'Offline',
+        tokenId: `TK-${crypto.randomUUID().slice(0, 8).toUpperCase()}`,
+        remarks: 'Payment Settled'
+      };
+      setTokenActivities(prev => [activity, ...prev]);
     }
 
     const tx = {
@@ -187,6 +242,7 @@ export const AppProvider = ({ children }) => {
       offlineBalance,
       offlineTokens,
       history,
+      tokenActivities,
       isOnline,
       networkState,
       tamperDetected,
