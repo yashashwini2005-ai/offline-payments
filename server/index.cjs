@@ -40,17 +40,26 @@ app.post('/notify', async (req, res) => {
   const { transactionId, amount, merchant, status, timestamp } = req.body;
 
   // Validate required fields
-  if (!transactionId || !amount || !merchant || !status || !timestamp) {
+  if (!transactionId || typeof amount === 'undefined' || amount === null || !merchant || !status || !timestamp) {
     return res.status(400).json({
       success: false,
       error: 'Missing required fields: transactionId, amount, merchant, status, timestamp'
     });
   }
 
-  if (typeof amount !== 'number' || amount <= 0) {
+  if (typeof amount !== 'number' || (amount < 0)) {
     return res.status(400).json({
       success: false,
-      error: 'amount must be a positive number'
+      error: 'amount must be a non-negative number'
+    });
+  }
+
+  // For regular payment notifications, amount must be > 0
+  const isFraudAlert = status?.toUpperCase() === 'FRAUD_ALERT';
+  if (!isFraudAlert && amount === 0) {
+    return res.status(400).json({
+      success: false,
+      error: 'amount must be greater than 0 for payment notifications'
     });
   }
 
