@@ -68,7 +68,7 @@ const SuccessScreen = () => {
               <DetailRow label={t('date')} value={`${lastTransaction.date}, ${lastTransaction.time}`} />
               <DetailRow label="Txn ID" value={`JAN${lastTransaction.id.slice(0, 8).toUpperCase()}`} />
               <div className="flex justify-between items-center pt-2">
-                <span className="text-[10px] font-bold text-primary-900/30 uppercase tracking-widest">Status</span>
+                <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Status</span>
                 <span className="px-2 py-0.5 bg-green-50 text-green-600 text-[8px] font-black uppercase rounded-lg">Verified</span>
               </div>
             </div>
@@ -89,7 +89,7 @@ const SuccessScreen = () => {
 
 const DetailRow = ({ label, value }) => (
   <div className="flex justify-between items-center gap-4">
-    <span className="text-[10px] font-bold text-primary-900/30 uppercase tracking-widest shrink-0">{label}</span>
+    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest shrink-0">{label}</span>
     <span className="text-[11px] font-black text-primary-900 truncate">{value}</span>
   </div>
 );

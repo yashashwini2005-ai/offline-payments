@@ -110,12 +110,12 @@ const HomeScreen = () => {
               </div>
               <div className="flex items-center gap-1">
                 <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-[7px] font-black text-primary-900/30 uppercase tracking-widest">Live Secure Sync</span>
+                <span className="text-[7px] font-black text-blue-500 uppercase tracking-widest">Live Secure Sync</span>
               </div>
             </div>
             <div className="flex items-baseline gap-2">
               <h2 className="text-4xl font-black text-primary-900 italic">{Math.round((offlineBalance / 1000) * 100)}%</h2>
-              <span className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest">Utilization</span>
+              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Utilization</span>
             </div>
           </div>
           <motion.button
@@ -129,7 +129,7 @@ const HomeScreen = () => {
         </div>
 
         <div className="space-y-3 pt-2">
-          <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-primary-900/40">
+          <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
             <span>Utilization: {Math.round((offlineBalance / 1000) * 100)}%</span>
             <span>Limit: ₹1,000</span>
           </div>
@@ -178,7 +178,7 @@ const HomeScreen = () => {
               <p className="text-[10px] font-black text-primary-900 uppercase tracking-widest">Token Audit Trail</p>
               <span className="text-[7px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">(Offline Only)</span>
             </div>
-            <p className="text-[8px] text-primary-900/30 font-bold uppercase tracking-widest">Verify Offline Signatures</p>
+            <p className="text-[8px] text-blue-500 font-bold uppercase tracking-widest">Verify Offline Signatures</p>
           </div>
         </div>
         <ChevronRight size={18} className="text-primary-200 group-hover:translate-x-1 transition-transform" />

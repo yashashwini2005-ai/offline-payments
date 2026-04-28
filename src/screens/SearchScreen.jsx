@@ -50,7 +50,7 @@ const SearchScreen = () => {
             </div>
             <div className="text-left">
               <p className="text-sm font-black text-primary-900">New Contact or Number</p>
-              <p className="text-[10px] font-bold text-primary-900/30 uppercase tracking-widest">Enter mobile/UPI to pay</p>
+              <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Enter mobile/UPI to pay</p>
             </div>
           </div>
           <ChevronRight size={20} className="text-primary-100 group-hover:translate-x-1 transition-transform" />
@@ -60,7 +60,7 @@ const SearchScreen = () => {
         <div className="space-y-4">
           <div className="flex items-center gap-2 px-1">
             <Clock size={14} className="text-primary-300" />
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-primary-900/40">Recent Contacts</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-blue-600">Recent Contacts</h3>
           </div>
           
           <div className="space-y-2">
@@ -80,7 +80,7 @@ const SearchScreen = () => {
                   </div>
                   <div className="text-left">
                     <p className="text-sm font-black text-primary-900 group-hover:text-primary-600 transition-colors">{contact.name}</p>
-                    <p className="text-[10px] font-bold text-primary-900/30 tracking-widest">{contact.phone}</p>
+                    <p className="text-[10px] font-bold text-slate-500 tracking-widest">{contact.phone}</p>
                   </div>
                 </div>
                 <div className="flex items-center gap-3">

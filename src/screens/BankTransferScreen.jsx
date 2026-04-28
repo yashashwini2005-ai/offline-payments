@@ -72,13 +72,13 @@ const BankTransferScreen = () => {
       <div className="flex-1 space-y-8 overflow-y-auto scrollbar-hide pb-20">
         <div className="space-y-2">
           <h2 className="text-3xl font-black tracking-tight text-primary-900 text-left">Bank Transfer</h2>
-          <p className="text-primary-900/40 text-xs font-bold uppercase tracking-widest text-left">Transfer to any bank account</p>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest text-left">Transfer to any bank account</p>
         </div>
 
         <div className="space-y-5">
           {/* Recipient Name */}
           <div className="space-y-2 text-left">
-            <label className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest ml-2">Recipient Name</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Recipient Name</label>
             <div className="relative group">
               <User className="absolute left-6 top-1/2 -translate-y-1/2 text-primary-300 group-focus-within:text-primary-600 transition-colors" size={20} />
               <input
@@ -93,7 +93,7 @@ const BankTransferScreen = () => {
 
           {/* Account Number */}
           <div className="space-y-2 text-left">
-            <label className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest ml-2">Account Number</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Account Number</label>
             <div className="relative group">
               <CreditCard className="absolute left-6 top-1/2 -translate-y-1/2 text-primary-300 group-focus-within:text-primary-600 transition-colors" size={20} />
               <input
@@ -108,7 +108,7 @@ const BankTransferScreen = () => {
 
           {/* IFSC Code */}
           <div className="space-y-2 text-left">
-            <label className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest ml-2">IFSC Code</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">IFSC Code</label>
             <div className="relative group">
               <Landmark className="absolute left-6 top-1/2 -translate-y-1/2 text-primary-300 group-focus-within:text-primary-600 transition-colors" size={20} />
               <input
@@ -123,7 +123,7 @@ const BankTransferScreen = () => {
 
           {/* Amount */}
           <div className="space-y-2 text-left">
-            <label className="text-[10px] font-black text-primary-900/30 uppercase tracking-widest ml-2">Amount</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-widest ml-2">Amount</label>
             <div className="relative group">
               <span className="absolute left-8 top-1/2 -translate-y-1/2 text-primary-600 text-2xl font-black">₹</span>
               <input
@@ -149,7 +149,7 @@ const BankTransferScreen = () => {
       </div>
 
       <div className="space-y-6 mb-10">
-        <div className="flex items-center justify-center gap-2 text-primary-900/30">
+        <div className="flex items-center justify-center gap-2 text-slate-500">
           <ShieldCheck size={14} />
           <span className="text-[8px] font-black uppercase tracking-widest">Secure IMPS Settlement</span>
         </div>

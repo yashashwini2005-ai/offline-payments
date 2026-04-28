@@ -158,7 +158,7 @@ const PinScreen = () => {
         <h2 className="text-3xl font-black tracking-tight text-primary-900 mb-2">
           {isBlocked ? 'Access Blocked' : t('enter_upi_pin')}
         </h2>
-        <p className="text-primary-900/40 text-[10px] font-black uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
+        <p className="text-slate-500 text-[10px] font-black uppercase tracking-[0.2em] mb-8 flex items-center gap-2">
           <ShieldCheck size={14} />
           {isBlocked ? 'Security Lockout Active' : t('secure_auth')}
         </p>
@@ -240,7 +240,7 @@ const PinScreen = () => {
                 />
               ))}
             </div>
-            <p className="text-[9px] text-center font-black uppercase tracking-widest text-primary-900/30">
+            <p className="text-[9px] text-center font-black uppercase tracking-widest text-slate-500">
               {MAX_ATTEMPTS - attempts} attempt{MAX_ATTEMPTS - attempts !== 1 ? 's' : ''} remaining
             </p>
           </motion.div>
@@ -286,18 +286,18 @@ const PinScreen = () => {
                 <ShieldCheck size={32} />
               </div>
               <h3 className="text-xl font-black text-primary-900 mb-2">{t('user_profile')}</h3>
-              <p className="text-[10px] font-black text-primary-900/40 uppercase tracking-widest mb-8">Authorized Balance View</p>
+              <p className="text-[10px] font-black text-blue-600 uppercase tracking-widest mb-8">Authorized Balance View</p>
 
               <div className="w-full space-y-4">
                 {(!pendingTransaction?.balanceType || pendingTransaction.balanceType === 'online') && (
                   <div className="p-5 glass rounded-2xl border border-primary-100 flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-primary-900/30 uppercase tracking-widest">{t('online_wallet')}</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('online_wallet')}</span>
                     <span className="text-lg font-black text-primary-900">₹{balance.toLocaleString()}</span>
                   </div>
                 )}
                 {(!pendingTransaction?.balanceType || pendingTransaction.balanceType === 'offline') && (
                   <div className="p-5 glass rounded-2xl border border-primary-100 flex justify-between items-center">
-                    <span className="text-[10px] font-bold text-primary-900/30 uppercase tracking-widest">{t('offline_reserve')}</span>
+                    <span className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{t('offline_reserve')}</span>
                     <span className="text-lg font-black text-primary-900">₹{offlineBalance}</span>
                   </div>
                 )}
@@ -332,7 +332,7 @@ const PinScreen = () => {
               </div>
               <div className="text-center">
                 <h3 className="text-xl font-black text-primary-900">Processing Payment</h3>
-                <p className="text-[10px] text-primary-900/40 font-black uppercase tracking-widest mt-1">Establishing Secure Connection</p>
+                <p className="text-[10px] text-slate-500 font-black uppercase tracking-widest mt-1">Establishing Secure Connection</p>
               </div>
             </motion.div>
           </div>

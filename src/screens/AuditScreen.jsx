@@ -44,7 +44,7 @@ const AuditScreen = () => {
               <div className="w-20 h-20 bg-primary-50 rounded-[2.5rem] flex items-center justify-center text-primary-200">
                 <ShieldCheck size={40} />
               </div>
-              <p className="text-primary-900/20 text-[10px] font-black uppercase tracking-widest italic">No token activity yet</p>
+              <p className="text-slate-400 text-[10px] font-black uppercase tracking-widest italic">No token activity yet</p>
             </div>
           ) : (
             tokenActivities.map((activity, i) => (
@@ -59,7 +59,7 @@ const AuditScreen = () => {
 
 const SummaryCard = ({ label, value, color, bg }) => (
   <div className={`${bg} p-4 rounded-3xl border border-primary-100/10 text-center space-y-1`}>
-    <p className="text-[8px] font-black uppercase tracking-widest text-primary-900/30">{label}</p>
+    <p className="text-[8px] font-black uppercase tracking-widest text-slate-500">{label}</p>
     <p className={`text-sm font-black ${color}`}>{value}</p>
   </div>
 );
@@ -80,7 +80,7 @@ const ActivityCard = ({ activity, index }) => (
         </div>
         <div>
           <h4 className="text-sm font-black text-primary-900">{activity.action}</h4>
-          <p className="text-[10px] font-bold text-primary-900/30 uppercase tracking-widest">{activity.time} • {activity.mode}</p>
+          <p className="text-[10px] font-bold text-slate-500 uppercase tracking-widest">{activity.time} • {activity.mode}</p>
         </div>
       </div>
       <div className="text-right">
@@ -96,11 +96,11 @@ const ActivityCard = ({ activity, index }) => (
 
     <div className="pt-3 border-t border-primary-50 grid grid-cols-2 gap-4">
       <div className="space-y-0.5">
-        <p className="text-[8px] font-black text-primary-900/30 uppercase tracking-widest">Token ID</p>
+        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Token ID</p>
         <p className="text-[10px] font-mono font-bold text-primary-900">{activity.tokenId.slice(0, 10)}***</p>
       </div>
       <div className="space-y-0.5 text-right">
-        <p className="text-[8px] font-black text-primary-900/30 uppercase tracking-widest">Remarks</p>
+        <p className="text-[8px] font-black text-slate-500 uppercase tracking-widest">Remarks</p>
         <p className="text-[10px] font-bold text-primary-900 truncate">***{activity.remarks.slice(-8)}</p>
       </div>
     </div>

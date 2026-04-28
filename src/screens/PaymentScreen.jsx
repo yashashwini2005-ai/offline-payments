@@ -44,13 +44,13 @@ const PaymentScreen = () => {
       <div className="flex-1 space-y-10">
         <div className="space-y-2">
           <h2 className="text-3xl font-black tracking-tight text-primary-900">Send Money</h2>
-          <p className="text-primary-900/40 text-xs font-bold uppercase tracking-widest">Instant {isOnline ? 'Online' : 'Offline'} Transfer</p>
+          <p className="text-slate-500 text-xs font-bold uppercase tracking-widest">Instant {isOnline ? 'Online' : 'Offline'} Transfer</p>
         </div>
 
         <div className="space-y-6">
           {/* Receiver Input */}
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-primary-900/30 uppercase tracking-[0.2em] ml-2">Recipient</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Recipient</label>
             <div className="relative group">
               <div className="absolute left-6 top-1/2 -translate-y-1/2 text-primary-400 group-focus-within:text-primary-600 transition-colors">
                 <User size={20} />
@@ -60,7 +60,7 @@ const PaymentScreen = () => {
                 value={receiver}
                 onChange={(e) => setReceiver(e.target.value)}
                 placeholder="UPI ID or Mobile Number"
-                className="w-full bg-white border border-primary-100 rounded-3xl py-5 px-14 text-sm font-bold text-primary-900 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/5 transition-all placeholder:text-primary-900/20"
+                className="w-full bg-white border border-primary-100 rounded-3xl py-5 px-14 text-sm font-bold text-primary-900 focus:outline-none focus:border-primary-500 focus:ring-4 focus:ring-primary-500/5 transition-all placeholder:text-slate-400"
               />
               <button className="absolute right-6 top-1/2 -translate-y-1/2 text-primary-400 hover:text-primary-600 transition-colors">
                 <QrCode size={20} />
@@ -70,7 +70,7 @@ const PaymentScreen = () => {
 
           {/* Amount Input */}
           <div className="space-y-3">
-            <label className="text-[10px] font-black text-primary-900/30 uppercase tracking-[0.2em] ml-2">Amount</label>
+            <label className="text-[10px] font-black text-slate-500 uppercase tracking-[0.2em] ml-2">Amount</label>
             <div className="relative">
               <span className="absolute left-8 top-1/2 -translate-y-1/2 text-primary-600 text-3xl font-black italic">₹</span>
               <input
@@ -96,13 +96,13 @@ const PaymentScreen = () => {
           )}
 
           <div className="p-5 glass-dark rounded-3xl space-y-3 border border-primary-100/50">
-            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-primary-900/40">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
               <span>Payment Mode</span>
               <span className={isOnline ? 'text-green-600' : 'text-primary-600'}>
                 {isOnline ? 'Online Wallet' : 'Offline Reserve'}
               </span>
             </div>
-            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-primary-900/40">
+            <div className="flex justify-between items-center text-[10px] font-bold uppercase tracking-widest text-slate-500">
               <span>Available</span>
               <span className="text-primary-900">₹{isOnline ? balance.toLocaleString() : offlineBalance.toLocaleString()}</span>
             </div>
@@ -111,7 +111,7 @@ const PaymentScreen = () => {
       </div>
 
       <div className="space-y-6 mb-10">
-        <div className="flex items-center justify-center gap-2 text-primary-900/30">
+        <div className="flex items-center justify-center gap-2 text-slate-500">
           <ShieldCheck size={14} />
           <span className="text-[8px] font-black uppercase tracking-[0.2em]">Secure Cryptographic Settlement</span>
         </div>
