@@ -31,7 +31,7 @@ const PaymentScreen = () => {
   };
 
   return (
-    <div className="p-6 pt-12 flex flex-col h-screen bg-premium-white">
+    <div className="w-full min-h-screen px-4 py-4 md:p-6 md:pt-12 flex flex-col bg-premium-white overflow-y-auto pb-32">
       <motion.button 
         whileHover={{ x: -5 }}
         whileTap={{ scale: 0.9 }}

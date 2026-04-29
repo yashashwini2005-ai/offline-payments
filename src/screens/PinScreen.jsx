@@ -130,7 +130,7 @@ const PinScreen = () => {
 
   // ─── Render ─────────────────────────────────────────────────────────────────
   return (
-    <div className="flex flex-col h-screen bg-premium-white p-8">
+    <div className="w-full min-h-screen px-4 py-4 md:p-8 flex flex-col bg-premium-white overflow-y-auto pb-32">
       {/* Header */}
       <div className="flex items-center mb-12">
         <motion.button

@@ -59,7 +59,7 @@ const BankTransferScreen = () => {
   };
 
   return (
-    <div className="p-6 pt-12 flex flex-col h-screen bg-premium-white">
+    <div className="w-full min-h-screen px-4 py-4 md:p-6 md:pt-12 flex flex-col bg-premium-white overflow-y-auto pb-32">
       {/* Header */}
       <motion.button 
         whileTap={{ scale: 0.9 }}
@@ -69,7 +69,7 @@ const BankTransferScreen = () => {
         <ChevronLeft size={24} strokeWidth={2.5} />
       </motion.button>
 
-      <div className="flex-1 space-y-8 overflow-y-auto scrollbar-hide pb-20">
+      <div className="flex-1 space-y-8 pb-10">
         <div className="space-y-2">
           <h2 className="text-3xl font-black tracking-tight text-primary-900 text-left">Bank Transfer</h2>
           <p className="text-slate-500 text-xs font-bold uppercase tracking-widest text-left">Transfer to any bank account</p>

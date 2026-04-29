@@ -20,7 +20,7 @@ const SearchScreen = () => {
   );
 
   return (
-    <div className="flex flex-col h-screen bg-premium-white overflow-hidden p-6 pt-12">
+    <div className="w-full min-h-screen px-4 py-4 md:p-6 md:pt-12 flex flex-col bg-premium-white overflow-y-auto pb-32">
       {/* Search Header */}
       <div className="space-y-6 mb-8">
         <h2 className="text-2xl font-black tracking-tight text-primary-900">Search & Pay</h2>

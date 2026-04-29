@@ -45,7 +45,7 @@ const HomeScreen = () => {
   if (isLoading) return <HomeSkeleton />;
 
   return (
-    <div className="p-6 pt-12 space-y-8 pb-32 overflow-y-auto max-h-screen scrollbar-hide bg-premium-white">
+    <div className="w-full min-h-screen px-4 py-4 md:p-6 md:pt-12 space-y-8 pb-32 overflow-y-auto scrollbar-hide bg-premium-white">
       {/* Header */}
       <div className="flex justify-between items-center">
         <div 
@@ -106,16 +106,16 @@ const HomeScreen = () => {
             <div className="flex items-center gap-2 mb-2">
               <div className="flex items-center gap-1.5 bg-orange-50 px-2 py-1 rounded-full border border-orange-100">
                 <Zap size={10} className="text-orange-500 fill-orange-500" />
-                <span className="text-[8px] font-black text-orange-600 uppercase tracking-widest">Reserve Capacity</span>
+                <span className="text-[8px] font-black text-orange-600 uppercase tracking-widest">{t('reserve_capacity')}</span>
               </div>
               <div className="flex items-center gap-1">
                 <span className="w-1 h-1 bg-green-500 rounded-full animate-pulse" />
-                <span className="text-[7px] font-black text-blue-500 uppercase tracking-widest">Live Secure Sync</span>
+                <span className="text-[7px] font-black text-blue-500 uppercase tracking-widest">{t('live_secure_sync')}</span>
               </div>
             </div>
             <div className="flex items-baseline gap-2">
               <h2 className="text-4xl font-black text-primary-900 italic">{Math.round((offlineBalance / 1000) * 100)}%</h2>
-              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">Utilization</span>
+              <span className="text-[10px] font-black text-blue-600 uppercase tracking-widest">{t('utilization')}</span>
             </div>
           </div>
           <motion.button
@@ -124,14 +124,14 @@ const HomeScreen = () => {
             className="px-5 py-3 blue-gradient rounded-2xl flex items-center gap-2 text-white font-black text-[10px] uppercase tracking-widest shadow-lg shadow-primary-500/20"
           >
             <Plus size={14} strokeWidth={4} />
-            Load Tokens
+            {t('load_tokens')}
           </motion.button>
         </div>
 
         <div className="space-y-3 pt-2">
           <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest text-slate-500">
-            <span>Utilization: {Math.round((offlineBalance / 1000) * 100)}%</span>
-            <span>Limit: ₹1,000</span>
+            <span>{t('utilization')}: {Math.round((offlineBalance / 1000) * 100)}%</span>
+            <span>{t('limit')}: ₹1,000</span>
           </div>
           <div className="h-2 w-full bg-primary-50 rounded-full overflow-hidden">
             <motion.div 
@@ -146,13 +146,13 @@ const HomeScreen = () => {
       {/* Quick Pay Merchants (From Photo) */}
       <div className="space-y-6">
         <div className="flex justify-between items-center px-1">
-          <h3 className="text-sm font-black text-primary-900">Quick Pay Merchants</h3>
+          <h3 className="text-sm font-black text-primary-900">{t('quick_pay_merchants')}</h3>
           <motion.button 
             whileTap={{ scale: 0.95 }}
             onClick={() => navigateTo('search')}
             className="text-[10px] font-black uppercase text-primary-600 tracking-widest"
           >
-            See All
+            {t('see_all')}
           </motion.button>
         </div>
         
@@ -175,10 +175,10 @@ const HomeScreen = () => {
           </div>
           <div className="text-left">
             <div className="flex items-center gap-2">
-              <p className="text-[10px] font-black text-primary-900 uppercase tracking-widest">Token Audit Trail</p>
-              <span className="text-[7px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">(Offline Only)</span>
+              <p className="text-[10px] font-black text-primary-900 uppercase tracking-widest">{t('token_audit_trail')}</p>
+              <span className="text-[7px] font-black bg-blue-50 text-blue-600 px-1.5 py-0.5 rounded-full uppercase tracking-tighter">{t('offline_only')}</span>
             </div>
-            <p className="text-[8px] text-blue-500 font-bold uppercase tracking-widest">Verify Offline Signatures</p>
+            <p className="text-[8px] text-blue-500 font-bold uppercase tracking-widest">{t('verify_offline_signatures')}</p>
           </div>
         </div>
         <ChevronRight size={18} className="text-primary-200 group-hover:translate-x-1 transition-transform" />
@@ -199,8 +199,8 @@ const HomeScreen = () => {
             >
               <div className="w-12 h-1.5 bg-primary-100 rounded-full mx-auto mb-8" />
               <div className="text-center mb-10 space-y-2">
-                <h3 className="text-2xl font-black text-primary-900">Authorize Reserve</h3>
-                <p className="text-[10px] text-primary-900/40 uppercase font-black tracking-widest">Bank Signed Token Minting</p>
+                <h3 className="text-2xl font-black text-primary-900">{t('authorize_reserve')}</h3>
+                <p className="text-[10px] text-slate-500 uppercase font-black tracking-widest">{t('bank_signed_token_minting')}</p>
               </div>
               <div className="space-y-8">
                 <div className="relative">
@@ -218,7 +218,7 @@ const HomeScreen = () => {
                   onClick={handleConvert}
                   className="w-full py-6 blue-gradient rounded-[2rem] text-white font-black tracking-widest shadow-xl text-lg uppercase"
                 >
-                  Confirm & Authorize
+                  {t('confirm_authorize')}
                 </motion.button>
               </div>
             </motion.div>

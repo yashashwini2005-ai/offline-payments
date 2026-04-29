@@ -71,7 +71,7 @@ const ProfileScreen = () => {
   ];
 
   return (
-    <div className="flex flex-col h-screen bg-premium-white overflow-hidden">
+    <div className="w-full min-h-screen px-4 py-4 flex flex-col bg-premium-white overflow-y-auto pb-32">
       {/* Top Navigation */}
       <div className="px-6 pt-12 pb-6 flex items-center justify-between glass sticky top-0 z-30 border-b border-primary-100">
         <motion.button 

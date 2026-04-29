@@ -17,7 +17,7 @@ const SuccessScreen = () => {
   const isBank = lastTransaction.type === 'BANK_TRANSFER';
 
   return (
-    <div className="p-6 pt-12 flex flex-col items-center min-h-screen bg-premium-white relative overflow-hidden">
+    <div className="w-full min-h-screen px-4 py-4 md:p-6 md:pt-12 flex flex-col items-center bg-premium-white relative overflow-y-auto pb-32">
       <motion.div 
         initial={{ scale: 0, opacity: 0 }} animate={{ scale: 1, opacity: 1 }}
         className="absolute top-20 w-[500px] h-[500px] bg-primary-500/5 rounded-full blur-[100px] -z-10"
